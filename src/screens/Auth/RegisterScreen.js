@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, Button, StyleSheet, Alert } from 'react-native';
+import { View, Text, TextInput, Button, StyleSheet, Alert, Image, TouchableOpacity } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
+import * as ImagePicker from 'expo-image-picker';
 import axios from 'axios';
 
 export default function RegisterScreen() {
@@ -8,14 +9,28 @@ export default function RegisterScreen() {
     username: '',
     email: '',
     bio: '',
-    profilePicture: '', // Add this to prevent errors
     year: '', 
     month: '', 
     day: ''
   });
 
+  const [profilePicture, setProfilePicture] = useState(null);
+
   const handleInputChange = (name, value) => {
     setFormData({ ...formData, [name]: value });
+  };
+
+  const pickImage = async () => {
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [1, 1], // Make the selected image square
+      quality: 1,
+    });
+
+    if (!result.canceled) {
+      setProfilePicture(result.assets[0].uri);
+    }
   };
 
   const handleRegister = async () => {
@@ -26,19 +41,32 @@ export default function RegisterScreen() {
       return;
     }
 
-    // Format dateOfBirth
     const dateOfBirth = `${formData.year}-${formData.month}-${formData.day}`;
 
-    // If profilePicture is not provided, use a default image URL
-    const profilePicture = formData.profilePicture || "https://example.com/default-profile.jpg";
+    const data = new FormData();
+    data.append("username", formData.username);
+    data.append("email", formData.email);
+    data.append("bio", formData.bio);
+    data.append("dateOfBirth", dateOfBirth);
+
+    if (profilePicture) {
+      const filename = profilePicture.split('/').pop();
+      const fileType = filename.split('.').pop();
+      data.append("profilePicture", {
+        uri: profilePicture,
+        name: filename,
+        type: `image/${fileType}`,
+      });
+    }
 
     try {
       const response = await axios.post(
         'http://10.71.106.234:5202/api/Users',
+        data,
         {
-          ...formData,
-          profilePicture, // Ensure a valid profile picture is sent
-          dateOfBirth
+          headers: { 
+            'Content-Type': 'multipart/form-data'
+          }
         }
       );
 
@@ -48,7 +76,7 @@ export default function RegisterScreen() {
       console.error("Error during registration:", error);
       if (error.response && error.response.data) {
         console.log("Server error response:", error.response.data);
-        Alert.alert('Error', error.response.data);
+        Alert.alert('Error', JSON.stringify(error.response.data.errors));
       } else {
         Alert.alert('Error', 'An unexpected error occurred.');
       }
@@ -65,6 +93,16 @@ export default function RegisterScreen() {
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Create Profile</Text>
+      
+      {/* Profile Picture */}
+      <TouchableOpacity onPress={pickImage}>
+        <Image
+          source={profilePicture ? { uri: profilePicture } : require('../../../assets/images/add-image-photo-icon.png')}
+          style={styles.profilePicture}
+        />
+        <Text style={styles.pickerLabel}>Tap to select a profile picture</Text>
+      </TouchableOpacity>
+
       <TextInput
         style={styles.input}
         placeholder="Username"
@@ -82,12 +120,6 @@ export default function RegisterScreen() {
         placeholder="Bio"
         value={formData.bio}
         onChangeText={(value) => handleInputChange('bio', value)}
-      />
-      <TextInput
-        style={styles.input}
-        placeholder="Profile Picture URL"
-        value={formData.profilePicture}
-        onChangeText={(value) => handleInputChange('profilePicture', value)}
       />
 
       <View style={styles.datePickerContainer}>
@@ -161,6 +193,13 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     borderRadius: 5,
   },
+  profilePicture: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    alignSelf: 'center',
+    marginBottom: 20,
+  },
   datePickerContainer: {
     marginBottom: 20,
   },
@@ -179,6 +218,7 @@ const styles = StyleSheet.create({
     marginTop: 5,
     fontSize: 12,
     color: '#555',
+    textAlign: 'center',
   },
   label: {
     fontSize: 16,
