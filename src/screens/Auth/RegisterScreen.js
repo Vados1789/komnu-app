@@ -1,15 +1,14 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, Button, StyleSheet } from 'react-native';
+import { View, Text, TextInput, Button, StyleSheet, Alert } from 'react-native';
 import axios from 'axios';
 
 export default function RegisterScreen() {
   const [formData, setFormData] = useState({
-    username: '',
-    email: '',
-    password: '',
-    profilePicture: '',
-    bio: '',
-    dateOfBirth: '',
+    username: 'simplifiedTestUser',
+    email: 'simplified@example.com',
+    profilePicture: 'https://example.com/profile.jpg',
+    bio: 'Just a test user',
+    dateOfBirth: '1990-01-01' // This can be set to '' if you want to make it optional by default
   });
 
   const handleInputChange = (name, value) => {
@@ -18,13 +17,30 @@ export default function RegisterScreen() {
 
   const handleRegister = async () => {
     console.log(formData);
+
+    // Basic input validation
+    if (!formData.username || !formData.email) {
+      Alert.alert('Error', 'Username and Email are required.');
+      return;
+    }
+
     try {
-        const response = await axios.post('https://localhost:44373/api/Users', formData);
-        console.log(response.data);
-        // Handle successful registration (e.g., navigate to login)
-      } catch (error) {
-        console.error(error);
+      const response = await axios.post(
+        'http://10.71.106.234:5202/api/Users', // Ensure the backend URL is correct and accessible
+        formData
+      );
+
+      console.log(response.data);
+      Alert.alert('Success', 'User created successfully!');
+    } catch (error) {
+      console.error(error);
+      if (error.response && error.response.data) {
+        console.log(error.response.data);
+        Alert.alert('Error', error.response.data);
+      } else {
+        Alert.alert('Error', 'An unexpected error occurred.');
       }
+    }
   };
 
   return (
@@ -41,13 +57,6 @@ export default function RegisterScreen() {
         placeholder="Email"
         value={formData.email}
         onChangeText={(value) => handleInputChange('email', value)}
-      />
-      <TextInput
-        style={styles.input}
-        placeholder="Password"
-        secureTextEntry
-        value={formData.password}
-        onChangeText={(value) => handleInputChange('password', value)}
       />
       <TextInput
         style={styles.input}
