@@ -8,6 +8,8 @@ export default function RegisterScreen() {
   const [formData, setFormData] = useState({
     username: '',
     email: '',
+    phoneNumber: '',
+    countryCode: '+45', // Default to Denmark
     bio: '',
     year: '', 
     month: '', 
@@ -46,6 +48,7 @@ export default function RegisterScreen() {
     const data = new FormData();
     data.append("username", formData.username);
     data.append("email", formData.email);
+    data.append("phoneNumber", `${formData.countryCode}${formData.phoneNumber}`);
     data.append("bio", formData.bio);
     data.append("dateOfBirth", dateOfBirth);
 
@@ -115,6 +118,20 @@ export default function RegisterScreen() {
         value={formData.email}
         onChangeText={(value) => handleInputChange('email', value)}
       />
+      <View style={styles.phoneContainer}>
+        <TextInput
+          style={styles.countryCodeInput}
+          value={formData.countryCode}
+          editable={false}
+        />
+        <TextInput
+          style={styles.phoneNumberInput}
+          placeholder="Phone Number"
+          value={formData.phoneNumber}
+          onChangeText={(value) => handleInputChange('phoneNumber', value)}
+          keyboardType="phone-pad"
+        />
+      </View>
       <TextInput
         style={styles.input}
         placeholder="Bio"
@@ -199,6 +216,26 @@ const styles = StyleSheet.create({
     borderRadius: 50,
     alignSelf: 'center',
     marginBottom: 20,
+  },
+  phoneContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  countryCodeInput: {
+    width: 60,
+    borderWidth: 1,
+    borderColor: '#ccc',
+    padding: 10,
+    borderRadius: 5,
+    marginRight: 5,
+  },
+  phoneNumberInput: {
+    flex: 1,
+    borderWidth: 1,
+    borderColor: '#ccc',
+    padding: 10,
+    borderRadius: 5,
   },
   datePickerContainer: {
     marginBottom: 20,
