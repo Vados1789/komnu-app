@@ -99,20 +99,19 @@ export default function LoginSettingsScreen({ route, navigation }) {
         />
       </View>
 
-      {isTwoFaEnabled && (
-        <View style={styles.twoFaContainer}>
-          <Text style={styles.label}>Select 2FA Method</Text>
-          <Picker
-            selectedValue={twoFaMethod}
-            style={styles.picker}
-            onValueChange={(value) => setTwoFaMethod(value)}
-          >
-            {availableTwoFaMethods.map((method, index) => (
-              <Picker.Item key={index} label={method.label} value={method.value} />
-            ))}
-          </Picker>
-        </View>
-      )}
+      <View style={styles.twoFaContainer}>
+        <Text style={styles.label}>Select 2FA Method</Text>
+        <Picker
+          selectedValue={twoFaMethod}
+          style={styles.picker}
+          onValueChange={(value) => setTwoFaMethod(value)}
+          enabled={isTwoFaEnabled} // Enable or disable the Picker based on the switch
+        >
+          {availableTwoFaMethods.map((method, index) => (
+            <Picker.Item key={index} label={method.label} value={method.value} />
+          ))}
+        </Picker>
+      </View>
 
       <View style={styles.buttonContainer}>
         <Button title="Save Settings" onPress={handleSaveSettings} />
@@ -144,21 +143,21 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: 5, // Reduce space below switch
+    marginBottom: 5,
   },
   twoFaContainer: {
-    marginBottom: 110, // Reduce margin to move Picker up
+    marginTop: 1, // Add margin to create space above the Picker
+    marginBottom: 100, // Increase space below the Picker to separate it from the button
   },
   picker: {
     height: 50,
-    marginTop: 5, // Ensure some space between label and Picker
+    marginVertical: 0, // Remove any extra vertical margin
   },
   label: {
     fontSize: 16,
     fontWeight: 'bold',
-    marginBottom: 5, // Smaller margin for closer alignment with Picker
   },
   buttonContainer: {
-    marginTop: 30, // Ensure button has enough space to be clearly below the Picker
+    marginTop: 20, // Ensure button has enough space to be clearly below the Picker
   }
 });
