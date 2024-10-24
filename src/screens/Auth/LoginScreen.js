@@ -1,14 +1,36 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, Button, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, TextInput, Button, StyleSheet, TouchableOpacity, Alert } from 'react-native';
+import axios from 'axios';
 
 export default function LoginScreen({ navigation }) {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
 
-  const handleLogin = () => {
-    // Logic to handle login (to be implemented later)
-    console.log("Username:", username);
-    console.log("Password:", password);
+  const handleLogin = async () => {
+    if (!username || !password) {
+      Alert.alert('Error', 'Please enter both username and password.');
+      return;
+    }
+
+    try {
+      const response = await axios.post('http://10.71.106.236:5202/api/Login/authenticate', {
+        username,
+        password,
+      });
+
+      console.log("Login successful:", response.data);
+      Alert.alert('Success', 'Login successful!');
+
+        // Navigate to the Home screen upon successful login
+        navigation.replace('Home');
+    } catch (error) {
+      console.error("Error during login:", error);
+      if (error.response && error.response.data) {
+        Alert.alert('Login Failed', 'Invalid username or password.');
+      } else {
+        Alert.alert('Error', 'An unexpected error occurred.');
+      }
+    }
   };
 
   return (

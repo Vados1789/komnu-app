@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, Button, Switch, Picker, StyleSheet, Alert } from 'react-native';
 import axios from 'axios';
 
@@ -8,18 +8,24 @@ export default function LoginSettingsScreen({ route, navigation }) {
   const [isTwoFaEnabled, setIsTwoFaEnabled] = useState(false);
   const [twoFaMethod, setTwoFaMethod] = useState('');
 
+  useEffect(() => {
+    if (route.params && route.params.userId) {
+      console.log("Registered User ID:", route.params.userId);
+    }
+  }, [route.params]);
+
   const handleSaveSettings = async () => {
     if (password !== confirmPassword) {
       Alert.alert('Error', 'Passwords do not match.');
       return;
     }
 
-    // Encrypt the password before sending it (you can use a library like bcryptjs)
+    // Encrypt the password before sending it (consider using a library like bcryptjs)
     try {
       const response = await axios.post(
-        'http://10.71.106.234:5202/api/Logins',
+        'http://10.71.106.236:5202/api/Logins', // Updated IP address
         {
-          userId: route.params.userId,
+          userId: route.params.userId, // Pass the userId from the previous screen
           password,
           isTwoFaEnabled,
           twoFaMethod

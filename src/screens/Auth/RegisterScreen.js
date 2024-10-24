@@ -3,6 +3,7 @@ import { View, Text, TextInput, Button, StyleSheet, Alert, Image, TouchableOpaci
 import { Picker } from '@react-native-picker/picker';
 import * as ImagePicker from 'expo-image-picker';
 import axios from 'axios';
+import { useNavigation } from '@react-navigation/native';
 
 export default function RegisterScreen() {
     const [formData, setFormData] = useState({
@@ -17,6 +18,7 @@ export default function RegisterScreen() {
     });
 
     const [profilePicture, setProfilePicture] = useState(null);
+    const navigation = useNavigation();
 
     const handleInputChange = (name, value) => {
         setFormData({ ...formData, [name]: value });
@@ -64,7 +66,7 @@ export default function RegisterScreen() {
 
         try {
             const response = await axios.post(
-                'http://10.71.106.234:5202/api/Users',
+                'http://10.71.106.236:5202/api/Users',
                 data,
                 {
                     headers: { 
@@ -75,6 +77,11 @@ export default function RegisterScreen() {
 
             console.log("Server response:", response.data);
             Alert.alert('Success', 'User created successfully!');
+            
+            // Navigate to LoginSettingsScreen and pass the user_id
+            const userId = response.data.userId;
+            navigation.navigate('LoginSettings', { userId });
+
         } catch (error) {
             console.error("Error during registration:", error);
             if (error.response && error.response.data) {
