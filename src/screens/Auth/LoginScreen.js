@@ -1,10 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import { View, Text, TextInput, Button, StyleSheet, TouchableOpacity, Alert } from 'react-native';
 import axios from 'axios';
+import { AuthContext } from '../../context/AuthContext';
 
 export default function LoginScreen({ navigation }) {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const { login } = useContext(AuthContext); // Use `login` from AuthContext
 
   const handleLogin = async () => {
     if (!username || !password) {
@@ -21,8 +23,11 @@ export default function LoginScreen({ navigation }) {
       console.log("Login successful:", response.data);
       Alert.alert('Success', 'Login successful!');
 
-        // Navigate to the Home screen upon successful login
-        navigation.replace('Home');
+      // Save user data to context using the `login` function
+      await login(response.data.user);
+
+      // Navigate to the Home screen upon successful login
+      navigation.replace('Home');
     } catch (error) {
       console.error("Error during login:", error);
       if (error.response && error.response.data) {
