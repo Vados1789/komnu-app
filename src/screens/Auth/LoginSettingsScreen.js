@@ -1,18 +1,36 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, Button, Switch, Picker, StyleSheet, Alert } from 'react-native';
+import { View, Text, TextInput, Button, Switch, StyleSheet, Alert } from 'react-native';
+import { Picker } from '@react-native-picker/picker';
 import axios from 'axios';
 
 export default function LoginSettingsScreen({ route, navigation }) {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [isTwoFaEnabled, setIsTwoFaEnabled] = useState(false);
-  const [twoFaMethod, setTwoFaMethod] = useState('');
+  const [twoFaMethod, setTwoFaMethod] = useState('email'); // Default to "email"
+  const [availableTwoFaMethods, setAvailableTwoFaMethods] = useState([]);
 
   useEffect(() => {
     if (route.params && route.params.userId) {
       console.log("Registered User ID:", route.params.userId);
+      fetchUserDetails(route.params.userId);
     }
   }, [route.params]);
+
+  const fetchUserDetails = async (userId) => {
+    try {
+      const response = await axios.get(`http://10.71.106.236:5202/api/Users/${userId}`);
+      const user = response.data;
+
+      const methods = [];
+      if (user.phoneNumber) methods.push({ label: "Phone Number", value: "sms" });
+      if (user.email) methods.push({ label: "Email", value: "email" });
+
+      setAvailableTwoFaMethods(methods);
+    } catch (error) {
+      console.error("Error fetching user details:", error);
+    }
+  };
 
   const handleSaveSettings = async () => {
     if (password !== confirmPassword) {
@@ -20,12 +38,16 @@ export default function LoginSettingsScreen({ route, navigation }) {
       return;
     }
 
-    // Encrypt the password before sending it (consider using a library like bcryptjs)
+    if (isTwoFaEnabled && !twoFaMethod) {
+      Alert.alert('Error', 'Please select a Two-Factor Authentication method.');
+      return;
+    }
+
     try {
       const response = await axios.post(
-        'http://10.71.106.236:5202/api/Logins', // Updated IP address
+        'http://10.71.106.236:5202/api/Logins',
         {
-          userId: route.params.userId, // Pass the userId from the previous screen
+          userId: route.params.userId,
           password,
           isTwoFaEnabled,
           twoFaMethod
@@ -33,7 +55,6 @@ export default function LoginSettingsScreen({ route, navigation }) {
       );
 
       Alert.alert('Success', 'Login settings saved successfully!');
-      // Navigate to the login screen or home screen after configuration
       navigation.navigate('Home');
     } catch (error) {
       console.error("Error saving login settings:", error);
@@ -49,7 +70,7 @@ export default function LoginSettingsScreen({ route, navigation }) {
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Set Login Settings</Text>
-      
+
       <TextInput
         style={styles.input}
         placeholder="Password"
@@ -64,29 +85,38 @@ export default function LoginSettingsScreen({ route, navigation }) {
         value={confirmPassword}
         onChangeText={setConfirmPassword}
       />
-      
+
       <View style={styles.switchContainer}>
         <Text>Enable Two-Factor Authentication</Text>
         <Switch
           value={isTwoFaEnabled}
-          onValueChange={setIsTwoFaEnabled}
+          onValueChange={(value) => {
+            setIsTwoFaEnabled(value);
+            if (value && !twoFaMethod) {
+              setTwoFaMethod('email'); // Default to email if 2FA is enabled
+            }
+          }}
         />
       </View>
 
       {isTwoFaEnabled && (
-        <Picker
-          selectedValue={twoFaMethod}
-          style={styles.picker}
-          onValueChange={(value) => setTwoFaMethod(value)}
-        >
-          <Picker.Item label="Select 2FA Method" value="" />
-          <Picker.Item label="SMS" value="sms" />
-          <Picker.Item label="Email" value="email" />
-          <Picker.Item label="Authenticator App" value="authenticator" />
-        </Picker>
+        <View style={styles.twoFaContainer}>
+          <Text style={styles.label}>Select 2FA Method</Text>
+          <Picker
+            selectedValue={twoFaMethod}
+            style={styles.picker}
+            onValueChange={(value) => setTwoFaMethod(value)}
+          >
+            {availableTwoFaMethods.map((method, index) => (
+              <Picker.Item key={index} label={method.label} value={method.value} />
+            ))}
+          </Picker>
+        </View>
       )}
 
-      <Button title="Save Settings" onPress={handleSaveSettings} />
+      <View style={styles.buttonContainer}>
+        <Button title="Save Settings" onPress={handleSaveSettings} />
+      </View>
     </View>
   );
 }
@@ -114,10 +144,21 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginVertical: 15,
+    marginBottom: 5, // Reduce space below switch
+  },
+  twoFaContainer: {
+    marginBottom: 110, // Reduce margin to move Picker up
   },
   picker: {
     height: 50,
-    marginVertical: 10,
+    marginTop: 5, // Ensure some space between label and Picker
   },
+  label: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginBottom: 5, // Smaller margin for closer alignment with Picker
+  },
+  buttonContainer: {
+    marginTop: 30, // Ensure button has enough space to be clearly below the Picker
+  }
 });
