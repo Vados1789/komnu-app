@@ -1,10 +1,18 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
+import FriendRequestComponent from '../../components/Friends/FriendRequestComponent';
+import FriendsListComponent from '../../components/Friends/FriendsListComponent';
+import AllPeopleComponent from '../../components/Friends/AllPeopleComponent';
 
 export default function FriendsScreen() {
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Friends Screen</Text>
+      <Text style={styles.title}>Friend Requests</Text>
+      <FriendRequestComponent />
+      <Text style={styles.title}>Friends List</Text>
+      <FriendsListComponent />
+      <Text style={styles.title}>Discover People</Text>
+      <AllPeopleComponent />
     </View>
   );
 }
@@ -12,13 +20,11 @@ export default function FriendsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
     padding: 20,
   },
   title: {
-    fontSize: 24,
+    fontSize: 20,
     fontWeight: 'bold',
-    marginBottom: 20,
+    marginVertical: 10,
   },
 });
