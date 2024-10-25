@@ -21,14 +21,15 @@ export default function LoginScreen({ navigation }) {
         password,
       });
 
-      console.log("Login successful:", response.data);
-      Alert.alert('Success', 'Login successful!');
-
-      // Save user data to context using the `login` function
-      await login(response.data.user);
-
-      // Navigate to the Home screen upon successful login
-      navigation.replace('Home');
+      if (response.data.requiresTwoFa) {
+        // Navigate to the 2FA verification screen if 2FA is required
+        navigation.navigate('TwoFaVerification', { userId: response.data.userId });
+      } else {
+        // Login without 2FA
+        await login(response.data.user);
+        navigation.replace('Home');
+        Alert.alert('Success', 'Login successful!');
+      }
     } catch (error) {
       console.error("Error during login:", error);
       if (error.response && error.response.data) {
