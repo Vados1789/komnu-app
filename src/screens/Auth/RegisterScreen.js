@@ -4,6 +4,7 @@ import { Picker } from '@react-native-picker/picker';
 import * as ImagePicker from 'expo-image-picker';
 import axios from 'axios';
 import { useNavigation } from '@react-navigation/native';
+import API_BASE_URL from '../../config/apiConfig.js';
 
 export default function RegisterScreen() {
     const [formData, setFormData] = useState({
@@ -66,7 +67,7 @@ export default function RegisterScreen() {
 
         try {
             const response = await axios.post(
-                'http://10.71.106.236:5202/api/Users',
+                `${API_BASE_URL}Users`,
                 data,
                 {
                     headers: { 
@@ -124,6 +125,7 @@ export default function RegisterScreen() {
                 placeholder="Email"
                 value={formData.email}
                 onChangeText={(value) => handleInputChange('email', value)}
+                autoCapitalize="none"
             />
             <View style={styles.phoneContainer}>
                 <TextInput
