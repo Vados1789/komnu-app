@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, Button, Switch, StyleSheet, Alert } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 import axios from 'axios';
+import API_BASE_URL from '../../config/apiConfig.js';
 
 export default function LoginSettingsScreen({ route, navigation }) {
   const [password, setPassword] = useState('');
@@ -19,7 +20,7 @@ export default function LoginSettingsScreen({ route, navigation }) {
 
   const fetchUserDetails = async (userId) => {
     try {
-      const response = await axios.get(`http://10.71.106.236:5202/api/Users/${userId}`);
+      const response = await axios.get(`${API_BASE_URL}Users/${userId}`);
       const user = response.data;
 
       const methods = [];

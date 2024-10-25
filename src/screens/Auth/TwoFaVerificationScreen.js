@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, Button, Alert, StyleSheet } from 'react-native';
 import axios from 'axios';
+import API_BASE_URL from '../../config/apiConfig.js';
 
 export default function TwoFaVerificationScreen({ route, navigation }) {
   const [code, setCode] = useState('');
@@ -13,7 +14,7 @@ export default function TwoFaVerificationScreen({ route, navigation }) {
     }
 
     try {
-      const response = await axios.post('http://10.71.106.236:5202/api/Login/verify-2fa', {
+      const response = await axios.post(`${API_BASE_URL}Login/verify-2fa`, {
         userId,
         token: code,
       });

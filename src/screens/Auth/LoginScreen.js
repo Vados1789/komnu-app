@@ -2,6 +2,7 @@ import React, { useState, useContext } from 'react';
 import { View, Text, TextInput, Button, StyleSheet, TouchableOpacity, Alert } from 'react-native';
 import axios from 'axios';
 import { AuthContext } from '../../context/AuthContext';
+import API_BASE_URL from '../../config/apiConfig.js';
 
 export default function LoginScreen({ navigation }) {
   const [username, setUsername] = useState('');
@@ -15,7 +16,7 @@ export default function LoginScreen({ navigation }) {
     }
 
     try {
-      const response = await axios.post('http://10.71.106.236:5202/api/Login/authenticate', {
+      const response = await axios.post(`${API_BASE_URL}Login/authenticate`, {
         username,
         password,
       });
