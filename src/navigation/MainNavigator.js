@@ -60,7 +60,7 @@ export default function MainNavigator() {
         <Stack.Screen name="Register" component={RegisterScreen} />
         <Stack.Screen name="LoginSettings" component={LoginSettingsScreen} />
         <Stack.Screen name="TwoFaVerification" component={TwoFaVerificationScreen} />
-        <Stack.Screen name="Home" component={MainTabNavigator} options={{ headerShown: false }} />
+        <Stack.Screen name="MainTabs" component={MainTabNavigator} options={{ headerShown: false }} />
       </Stack.Navigator>
     </NavigationContainer>
   );

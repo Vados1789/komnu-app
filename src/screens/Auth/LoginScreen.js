@@ -27,7 +27,7 @@ export default function LoginScreen({ navigation }) {
       } else {
         // Login without 2FA
         await login(response.data.user);
-        navigation.replace('Home');
+        navigation.replace('MainTabs');
         Alert.alert('Success', 'Login successful!');
       }
     } catch (error) {

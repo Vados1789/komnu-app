@@ -21,7 +21,7 @@ export default function TwoFaVerificationScreen({ route, navigation }) {
 
       if (response.data.message === "2FA Verification successful") {
         Alert.alert('Success', 'Verification successful!');
-        navigation.replace('Home'); // Navigate to the Home screen upon successful verification
+        navigation.replace('MainTabs');
       }
     } catch (error) {
       console.error("Error during 2FA verification:", error);

@@ -46,7 +46,7 @@ export default function LoginSettingsScreen({ route, navigation }) {
 
     try {
       const response = await axios.post(
-        'http://10.71.106.236:5202/api/Logins',
+        `${API_BASE_URL}Logins`,
         {
           userId: route.params.userId,
           password,
@@ -56,7 +56,7 @@ export default function LoginSettingsScreen({ route, navigation }) {
       );
 
       Alert.alert('Success', 'Login settings saved successfully!');
-      navigation.navigate('Home');
+      navigation.navigate('MainTabs');
     } catch (error) {
       console.error("Error saving login settings:", error);
       if (error.response && error.response.data) {
