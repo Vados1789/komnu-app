@@ -21,6 +21,8 @@ export default function LoginScreen({ navigation }) {
         password,
       });
 
+      console.log("Server response:", response.data);
+
       if (response.data.requiresTwoFa) {
         // Navigate to the 2FA verification screen if 2FA is required
         navigation.navigate('TwoFaVerification', { userId: response.data.userId });

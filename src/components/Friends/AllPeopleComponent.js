@@ -1,18 +1,19 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useContext } from 'react';
 import { View, Text, Button, FlatList, StyleSheet, Image, TouchableOpacity } from 'react-native';
 import axios from 'axios';
 import API_BASE_URL from '../../config/apiConfig.js';
 import IMAGE_BASE_URL from '../../config/imageConfig.js';
+import { AuthContext } from '../../context/AuthContext';
 
 export default function AllPeopleComponent() {
+  const { user } = useContext(AuthContext);
+  console.log("User:", user);
   const [people, setPeople] = useState([]);
-
-  console.log("image",  `${IMAGE_BASE_URL}/images/n1fdbu4f.myg.jpeg`)
 
   useEffect(() => {
     const fetchAllPeople = async () => {
       try {
-        const response = await axios.get(`${API_BASE_URL}Friends/all`);
+        const response = await axios.get(`${API_BASE_URL}Friends/all/${user.userId}`);
         console.log("Fetched people:", response.data);
         setPeople(response.data);
       } catch (error) {
@@ -20,13 +21,15 @@ export default function AllPeopleComponent() {
       }
     };
 
-    fetchAllPeople();
-  }, []);
+    if (user) {
+      fetchAllPeople();
+    }
+  }, [user]);
 
   return (
     <FlatList
       data={people}
-      keyExtractor={(item, index) => item.userId ? item.userId.toString() : index.toString()}
+      keyExtractor={(item) => item.userId.toString()}
       renderItem={({ item }) => (
         <View style={styles.personContainer}>
           <Image

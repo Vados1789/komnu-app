@@ -12,12 +12,10 @@ export const AuthProvider = ({ children }) => {
   // Function to login and store user information
   const login = async (userData) => {
     try {
+      // Log full user data from server
+      console.log("User logging in with data:", userData);
       await AsyncStorage.setItem('user', JSON.stringify(userData));
       setUser(userData);
-      
-      // Log user data to console
-      console.log("User logged in:", userData);
-      
     } catch (error) {
       console.log("Error saving user data:", error);
     }
