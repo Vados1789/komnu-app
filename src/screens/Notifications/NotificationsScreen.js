@@ -1,10 +1,10 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 
-export default function FriendsScreen() {
+export default function NotificationScreen() {
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Menu Screen</Text>
+      <Text style={styles.title}>Notifications</Text>
     </View>
   );
 }
@@ -14,11 +14,9 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 20,
   },
   title: {
     fontSize: 24,
     fontWeight: 'bold',
-    marginBottom: 20,
   },
 });
