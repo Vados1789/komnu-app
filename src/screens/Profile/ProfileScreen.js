@@ -1,63 +1,37 @@
-import React, { useEffect, useState } from 'react';
+import React, { useContext } from 'react';
 import { View, Text, StyleSheet, Image, ActivityIndicator } from 'react-native';
-import axios from 'axios';
+import { AuthContext } from '../../context/AuthContext';
 
-const IMAGE_BASE_URL = 'http://10.71.106.236:5202'; // Base URL for your images
-const USER_ID = 45; // ID for the user "Tj"
+const IMAGE_BASE_URL = 'http://10.71.106.236:5202';
+const DEFAULT_IMAGE_URL = 'https://via.placeholder.com/100';
 
 export default function ProfileScreen() {
-  const [userData, setUserData] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const { user, isLoading } = useContext(AuthContext);
 
-  useEffect(() => {
-    const fetchUserData = async () => {
-      try {
-        const response = await axios.get(`${IMAGE_BASE_URL}/api/users/${USER_ID}`);
-        setUserData(response.data);
-      } catch (error) {
-        console.error('Error fetching user data:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchUserData();
-  }, []);
-
-  // Function to fetch the image separately if needed
-  const fetchImage = async (imagePath) => {
-    try {
-      const response = await axios.get(`${IMAGE_BASE_URL}${imagePath}`);
-      return response.data; // or response.data if it's the image blob
-    } catch (error) {
-      console.error('Error fetching image:', error);
-    }
-  };
-
-  if (loading) {
-    return <ActivityIndicator size="large" color="#0000ff" />; // Show loading indicator while fetching
+  if (isLoading) {
+    return <ActivityIndicator size="large" color="#0000ff" />;
   }
 
-  if (!userData) {
-    return <Text>Error loading user data.</Text>; // Handle case where no user data is fetched
+  if (!user) {
+    return <Text>Error loading user data.</Text>;
   }
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Profile: {userData.username}</Text>
-      {userData.profilePicture ? (
-        <Image
-          source={{ uri: `${IMAGE_BASE_URL}${userData.profilePicture}` }} // Constructing the full URL for the profile picture
-          style={styles.profilePicture}
-          resizeMode="cover"
-        />
-      ) : (
-        <Text>No profile picture available</Text> // Fallback if no picture
-      )}
-      <Text style={styles.bio}>Bio: {userData.bio}</Text>
-      <Text style={styles.email}>Email: {userData.email}</Text>
-      <Text style={styles.phone}>Phone: {userData.phoneNumber}</Text>
-      <Text style={styles.dob}>Date of Birth: {new Date(userData.dateOfBirth).toLocaleDateString()}</Text>
+      <Text style={styles.title}>Profile: {user.username}</Text>
+      <Image
+        source={{
+          uri: user.profilePicture ? `${IMAGE_BASE_URL}${user.profilePicture}` : DEFAULT_IMAGE_URL,
+        }}
+        style={styles.profilePicture}
+        resizeMode="cover"
+      />
+      <Text style={styles.bio}>Bio: {user.bio || 'No bio available'}</Text>
+      <Text style={styles.email}>Email: {user.email}</Text>
+      <Text style={styles.phone}>Phone: {user.phoneNumber || 'Not provided'}</Text>
+      <Text style={styles.dob}>
+        Date of Birth: {user.dateOfBirth ? new Date(user.dateOfBirth).toLocaleDateString() : 'Not provided'}
+      </Text>
     </View>
   );
 }
