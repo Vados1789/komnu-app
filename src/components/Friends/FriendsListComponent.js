@@ -46,8 +46,8 @@ export default function FriendsListComponent() {
         <View style={styles.friendContainer}>
           <Image
             source={{
-              uri: item.ProfilePicture
-                ? `${IMAGE_BASE_URL}${item.ProfilePicture}`
+              uri: item.profilePicture
+                ? `${IMAGE_BASE_URL}${item.profilePicture}`
                 : 'https://via.placeholder.com/50',
             }}
             style={styles.profileImage}
