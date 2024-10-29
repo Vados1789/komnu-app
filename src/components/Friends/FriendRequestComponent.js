@@ -7,6 +7,7 @@ import API_BASE_URL from '../../config/apiConfig.js';
 export default function FriendRequestComponent() {
   const { user } = useContext(AuthContext);
   const [friendRequests, setFriendRequests] = useState([]);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     const fetchFriendRequests = async () => {
@@ -14,8 +15,10 @@ export default function FriendRequestComponent() {
         try {
           const response = await axios.get(`${API_BASE_URL}Friends/requests/${user.userId}`);
           setFriendRequests(response.data);
+          setError(null); // Reset error if fetch is successful
         } catch (error) {
           console.error("Error fetching friend requests:", error);
+          setError("An error occurred while fetching friend requests.");
         }
       }
     };
@@ -23,10 +26,15 @@ export default function FriendRequestComponent() {
     fetchFriendRequests();
   }, [user]);
 
+  if (error) {
+    return <Text style={styles.errorText}>{error}</Text>;
+  }
+
   return (
     <FlatList
       data={friendRequests}
       keyExtractor={(item) => item.FriendId.toString()}
+      ListEmptyComponent={<Text>No friend requests available.</Text>}
       renderItem={({ item }) => (
         <View style={styles.friendRequestItem}>
           <Text>{item.Username || 'No Username Available'}</Text>
@@ -41,5 +49,10 @@ const styles = StyleSheet.create({
     padding: 10,
     borderBottomWidth: 1,
     borderBottomColor: '#ccc',
+  },
+  errorText: {
+    color: 'red',
+    textAlign: 'center',
+    marginTop: 20,
   },
 });
