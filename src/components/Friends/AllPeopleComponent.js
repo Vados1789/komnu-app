@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useContext } from 'react';
-import { View, Text, Button, FlatList, StyleSheet, Image, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, FlatList, StyleSheet, Image, TouchableOpacity, Alert } from 'react-native';
 import axios from 'axios';
 import API_BASE_URL from '../../config/apiConfig.js';
 import IMAGE_BASE_URL from '../../config/imageConfig.js';
@@ -8,33 +8,30 @@ import { AuthContext } from '../../context/AuthContext';
 export default function AllPeopleComponent() {
   const { user } = useContext(AuthContext);
   const [people, setPeople] = useState([]);
-  const [sentRequests, setSentRequests] = useState(new Set()); // Track users with sent requests
+  const [sentRequests, setSentRequests] = useState(new Set());
 
   useEffect(() => {
-    const fetchAllPeople = async () => {
+    const fetchAllPeopleWithStatus = async () => {
       try {
-        const response = await axios.get(`${API_BASE_URL}Friends/all/${user.userId}`);
+        const response = await axios.get(`${API_BASE_URL}Friends/all-with-status/${user.userId}`);
         setPeople(response.data);
       } catch (error) {
-        console.error("Error fetching people:", error);
+        console.error("Error fetching people with status:", error);
       }
     };
 
     if (user) {
-      fetchAllPeople();
+      fetchAllPeopleWithStatus();
     }
   }, [user]);
 
   const handleSendRequest = async (receiverId) => {
     try {
       await axios.post(`${API_BASE_URL}Friends/send`, {
-        UserId1: user.userId, // Sender (logged-in user)
-        UserId2: receiverId,   // Receiver (selected user)
+        UserId1: user.userId,
+        UserId2: receiverId,
       });
-      
-      // Add receiverId to sentRequests to update button state
       setSentRequests((prev) => new Set(prev).add(receiverId));
-
       Alert.alert("Success", "Friend request sent!");
     } catch (error) {
       console.error("Error sending friend request:", error);
@@ -58,19 +55,25 @@ export default function AllPeopleComponent() {
           />
           <View style={styles.textContainer}>
             <Text style={styles.usernameText}>{item.username || 'Unknown User'}</Text>
-          </View>
-          <TouchableOpacity
-            style={[
-              styles.addButton,
-              sentRequests.has(item.userId) && styles.requestSentButton
-            ]}
-            onPress={() => handleSendRequest(item.userId)}
-            disabled={sentRequests.has(item.userId)} // Disable button if request is sent
-          >
-            <Text style={styles.addButtonText}>
-              {sentRequests.has(item.userId) ? "Request Sent" : "Add Friend"}
+            <Text style={styles.statusText}>
+              {item.friendStatus === "Pending" ? "Request Sent" : item.friendStatus === "Accepted" ? "Friend" : ""}
             </Text>
-          </TouchableOpacity>
+          </View>
+          {item.friendStatus === "None" ? (
+            <TouchableOpacity
+              style={[styles.addButton, sentRequests.has(item.userId) && styles.requestSentButton]}
+              onPress={() => handleSendRequest(item.userId)}
+              disabled={sentRequests.has(item.userId)}
+            >
+              <Text style={styles.addButtonText}>
+                {sentRequests.has(item.userId) ? "Request Sent" : "Add Friend"}
+              </Text>
+            </TouchableOpacity>
+          ) : item.friendStatus === "Pending" ? (
+            <View style={styles.pendingLabel}>
+              <Text style={styles.pendingText}>Pending</Text>
+            </View>
+          ) : null}
         </View>
       )}
     />
@@ -100,6 +103,10 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold',
   },
+  statusText: {
+    fontSize: 14,
+    color: '#888',
+  },
   addButton: {
     backgroundColor: '#007bff',
     paddingVertical: 5,
@@ -107,10 +114,21 @@ const styles = StyleSheet.create({
     borderRadius: 5,
   },
   requestSentButton: {
-    backgroundColor: '#ccc', // Change color to indicate request sent
+    backgroundColor: '#ccc',
   },
   addButtonText: {
     color: '#fff',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  pendingLabel: {
+    backgroundColor: '#ffdd57',
+    paddingVertical: 5,
+    paddingHorizontal: 10,
+    borderRadius: 5,
+  },
+  pendingText: {
+    color: '#333',
     fontSize: 14,
     fontWeight: '600',
   },
