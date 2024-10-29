@@ -1,11 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import { View, Text, TextInput, Button, Alert, StyleSheet } from 'react-native';
 import axios from 'axios';
 import API_BASE_URL from '../../config/apiConfig.js';
+import { AuthContext } from '../../context/AuthContext';
 
 export default function TwoFaVerificationScreen({ route, navigation }) {
   const [code, setCode] = useState('');
   const { userId } = route.params; // Receive userId from the previous screen
+  const { login } = useContext(AuthContext); // Access the login function from AuthContext
 
   const handleVerifyCode = async () => {
     if (!code) {
@@ -20,8 +22,11 @@ export default function TwoFaVerificationScreen({ route, navigation }) {
       });
 
       if (response.data.message === "2FA Verification successful") {
+        // Log the user data in the context after successful verification
+        await login(response.data.user);
+
         Alert.alert('Success', 'Verification successful!');
-        navigation.replace('MainTabs');
+        navigation.replace('MainTabs'); // Navigate to the main screen
       }
     } catch (error) {
       console.error("Error during 2FA verification:", error);
