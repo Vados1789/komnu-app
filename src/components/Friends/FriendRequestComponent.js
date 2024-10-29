@@ -30,7 +30,11 @@ export default function FriendRequestComponent() {
 
   const handleAccept = async (friendId) => {
     try {
-      await axios.post(`${API_BASE_URL}Friends/confirm`, friendId);
+      await axios.post(
+        `${API_BASE_URL}Friends/confirm`,
+        { friendId }, // Send as JSON object
+        { headers: { 'Content-Type': 'application/json' } }
+      );
       setFriendRequests(friendRequests.filter(request => request.friendId !== friendId));
       Alert.alert("Success", "Friend request accepted.");
     } catch (error) {
@@ -39,9 +43,13 @@ export default function FriendRequestComponent() {
     }
   };
 
-  const handleReject = async (friendId) => {
+const handleReject = async (friendId) => {
     try {
-      await axios.post(`${API_BASE_URL}Friends/remove`, friendId);
+      await axios.post(
+        `${API_BASE_URL}Friends/remove`,
+        { friendId }, // Send as JSON object
+        { headers: { 'Content-Type': 'application/json' } }
+      );
       setFriendRequests(friendRequests.filter(request => request.friendId !== friendId));
       Alert.alert("Success", "Friend request rejected.");
     } catch (error) {
@@ -95,12 +103,11 @@ const styles = StyleSheet.create({
     marginRight: 15,
   },
   usernameText: {
-    flex: 1, // Occupies remaining space on the left
+    flex: 1,
     fontSize: 16,
   },
   buttonContainer: {
     flexDirection: 'row',
-    justifyContent: 'flex-end',
     gap: 10, // Add some space between buttons
   },
   errorText: {
