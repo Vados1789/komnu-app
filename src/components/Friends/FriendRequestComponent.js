@@ -14,6 +14,7 @@ export default function FriendRequestComponent() {
       if (user && user.userId) {
         try {
           const response = await axios.get(`${API_BASE_URL}Friends/requests/${user.userId}`);
+          console.log('Getting friend requests data received:', response.data);
           setFriendRequests(response.data);
           setError(null); // Reset error if fetch is successful
         } catch (error) {
@@ -33,11 +34,11 @@ export default function FriendRequestComponent() {
   return (
     <FlatList
       data={friendRequests}
-      keyExtractor={(item) => item.FriendId.toString()}
+      keyExtractor={(item, index) => (item.friendId ? item.friendId.toString() : `temp-key-${index}`)}
       ListEmptyComponent={<Text>No friend requests available.</Text>}
       renderItem={({ item }) => (
         <View style={styles.friendRequestItem}>
-          <Text>{item.Username || 'No Username Available'}</Text>
+          <Text>{item.username || 'No Username Available'}</Text>
         </View>
       )}
     />

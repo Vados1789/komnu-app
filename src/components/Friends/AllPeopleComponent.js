@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useContext } from 'react';
-import { View, Text, Button, FlatList, StyleSheet, Image, TouchableOpacity } from 'react-native';
+import { View, Text, Button, FlatList, StyleSheet, Image, TouchableOpacity, Alert } from 'react-native';
 import axios from 'axios';
 import API_BASE_URL from '../../config/apiConfig.js';
 import IMAGE_BASE_URL from '../../config/imageConfig.js';
@@ -7,14 +7,13 @@ import { AuthContext } from '../../context/AuthContext';
 
 export default function AllPeopleComponent() {
   const { user } = useContext(AuthContext);
-  console.log("User:", user);
   const [people, setPeople] = useState([]);
+  const [sentRequests, setSentRequests] = useState(new Set()); // Track users with sent requests
 
   useEffect(() => {
     const fetchAllPeople = async () => {
       try {
         const response = await axios.get(`${API_BASE_URL}Friends/all/${user.userId}`);
-        console.log("Fetched people:", response.data);
         setPeople(response.data);
       } catch (error) {
         console.error("Error fetching people:", error);
@@ -25,6 +24,23 @@ export default function AllPeopleComponent() {
       fetchAllPeople();
     }
   }, [user]);
+
+  const handleSendRequest = async (receiverId) => {
+    try {
+      await axios.post(`${API_BASE_URL}Friends/send`, {
+        UserId1: user.userId, // Sender (logged-in user)
+        UserId2: receiverId,   // Receiver (selected user)
+      });
+      
+      // Add receiverId to sentRequests to update button state
+      setSentRequests((prev) => new Set(prev).add(receiverId));
+
+      Alert.alert("Success", "Friend request sent!");
+    } catch (error) {
+      console.error("Error sending friend request:", error);
+      Alert.alert("Error", "Failed to send friend request.");
+    }
+  };
 
   return (
     <FlatList
@@ -43,8 +59,17 @@ export default function AllPeopleComponent() {
           <View style={styles.textContainer}>
             <Text style={styles.usernameText}>{item.username || 'Unknown User'}</Text>
           </View>
-          <TouchableOpacity style={styles.addButton} onPress={() => { /* Add friend logic */ }}>
-            <Text style={styles.addButtonText}>Add Friend</Text>
+          <TouchableOpacity
+            style={[
+              styles.addButton,
+              sentRequests.has(item.userId) && styles.requestSentButton
+            ]}
+            onPress={() => handleSendRequest(item.userId)}
+            disabled={sentRequests.has(item.userId)} // Disable button if request is sent
+          >
+            <Text style={styles.addButtonText}>
+              {sentRequests.has(item.userId) ? "Request Sent" : "Add Friend"}
+            </Text>
           </TouchableOpacity>
         </View>
       )}
@@ -80,6 +105,9 @@ const styles = StyleSheet.create({
     paddingVertical: 5,
     paddingHorizontal: 15,
     borderRadius: 5,
+  },
+  requestSentButton: {
+    backgroundColor: '#ccc', // Change color to indicate request sent
   },
   addButtonText: {
     color: '#fff',
