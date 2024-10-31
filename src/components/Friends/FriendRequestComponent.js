@@ -5,29 +5,39 @@ import { AuthContext } from '../../context/AuthContext';
 import API_BASE_URL from '../../config/apiConfig.js';
 import IMAGE_BASE_URL from '../../config/imageConfig.js';
 
-export default function FriendRequestComponent() {
+export default function FriendRequestComponent({ searchText }) {
   const { user } = useContext(AuthContext);
   const [friendRequests, setFriendRequests] = useState([]);
-  const [error, setError] = useState(null);
-
-  // Function to fetch friend requests
-  const fetchFriendRequests = async () => {
-    if (user && user.userId) {
-      try {
-        const response = await axios.get(`${API_BASE_URL}Friends/requests/${user.userId}`);
-        console.log('Getting friend requests data received:', response.data);
-        setFriendRequests(response.data);
-        setError(null);
-      } catch (error) {
-        console.error("Error fetching friend requests:", error);
-        setError("An error occurred while fetching friend requests.");
-      }
-    }
-  };
+  const [filteredRequests, setFilteredRequests] = useState([]);
 
   useEffect(() => {
+    const fetchFriendRequests = async () => {
+      if (user && user.userId) {
+        try {
+          const response = await axios.get(`${API_BASE_URL}Friends/requests/${user.userId}`);
+          setFriendRequests(response.data);
+          setFilteredRequests(response.data);
+        } catch (error) {
+          console.error("Error fetching friend requests:", error);
+        }
+      }
+    };
+
     fetchFriendRequests();
   }, [user]);
+
+  useEffect(() => {
+    if (searchText.trim() === '') {
+      setFilteredRequests(friendRequests);
+    } else {
+      const lowercasedSearchText = searchText.toLowerCase();
+      setFilteredRequests(
+        friendRequests.filter(request =>
+          request.username.toLowerCase().includes(lowercasedSearchText)
+        )
+      );
+    }
+  }, [searchText, friendRequests]);
 
   const handleAccept = async (friendId) => {
     try {
@@ -37,7 +47,6 @@ export default function FriendRequestComponent() {
         { headers: { 'Content-Type': 'application/json' } }
       );
       Alert.alert("Success", "Friend request accepted.");
-      // Update the list after accepting the request
       setFriendRequests(friendRequests.filter(request => request.friendId !== friendId));
     } catch (error) {
       console.error("Error accepting friend request:", error);
@@ -53,7 +62,6 @@ export default function FriendRequestComponent() {
         { headers: { 'Content-Type': 'application/json' } }
       );
       Alert.alert("Success", "Friend request rejected.");
-      // Update the list after rejecting the request
       setFriendRequests(friendRequests.filter(request => request.friendId !== friendId));
     } catch (error) {
       console.error("Error rejecting friend request:", error);
@@ -61,13 +69,9 @@ export default function FriendRequestComponent() {
     }
   };
 
-  if (error) {
-    return <Text style={styles.errorText}>{error}</Text>;
-  }
-
   return (
     <FlatList
-      data={friendRequests}
+      data={filteredRequests}
       keyExtractor={(item, index) => (item.friendId ? item.friendId.toString() : `temp-key-${index}`)}
       ListEmptyComponent={<Text>No friend requests available.</Text>}
       renderItem={({ item }) => (

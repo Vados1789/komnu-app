@@ -1,28 +1,40 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, TextInput } from 'react-native';
 import FriendRequestComponent from '../../components/Friends/FriendRequestComponent';
 import FriendsListComponent from '../../components/Friends/FriendsListComponent';
 import AllPeopleComponent from '../../components/Friends/AllPeopleComponent';
 
 export default function FriendsScreen() {
   const [activeTab, setActiveTab] = useState('FriendRequests');
+  const [searchText, setSearchText] = useState('');
+
+  // Handle search input change
+  const handleSearch = (text) => {
+    setSearchText(text);
+  };
 
   // Render the component based on activeTab
   const renderComponent = () => {
     switch (activeTab) {
       case 'FriendRequests':
-        return <FriendRequestComponent />;
+        return <FriendRequestComponent searchText={searchText} />;
       case 'FriendsList':
-        return <FriendsListComponent />;
+        return <FriendsListComponent searchText={searchText} />;
       case 'DiscoverPeople':
-        return <AllPeopleComponent />;
+        return <AllPeopleComponent searchText={searchText} />;
       default:
-        return <FriendRequestComponent />;
+        return <FriendRequestComponent searchText={searchText} />;
     }
   };
 
   return (
     <View style={styles.container}>
+      <TextInput
+        style={styles.searchBar}
+        placeholder="Search for users..."
+        value={searchText}
+        onChangeText={handleSearch}
+      />
       <View style={styles.tabContainer}>
         <TouchableOpacity
           style={[styles.tabButton, activeTab === 'FriendRequests' && styles.activeTab]}
@@ -52,6 +64,14 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 20,
+  },
+  searchBar: {
+    height: 40,
+    borderColor: '#ccc',
+    borderWidth: 1,
+    borderRadius: 5,
+    paddingHorizontal: 10,
+    marginBottom: 10,
   },
   tabContainer: {
     flexDirection: 'row',

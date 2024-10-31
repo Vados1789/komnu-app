@@ -1,16 +1,15 @@
 import React, { useEffect, useState, useContext } from 'react';
-import { View, Text, FlatList, StyleSheet, Image, TouchableOpacity, Alert, TextInput } from 'react-native';
+import { View, Text, FlatList, StyleSheet, Image, TouchableOpacity, Alert } from 'react-native';
 import axios from 'axios';
 import API_BASE_URL from '../../config/apiConfig.js';
 import IMAGE_BASE_URL from '../../config/imageConfig.js';
 import { AuthContext } from '../../context/AuthContext';
 
-export default function AllPeopleComponent() {
+export default function AllPeopleComponent({ searchText }) {
   const { user } = useContext(AuthContext);
   const [people, setPeople] = useState([]);
   const [filteredPeople, setFilteredPeople] = useState([]);
   const [sentRequests, setSentRequests] = useState(new Set());
-  const [searchText, setSearchText] = useState('');
 
   useEffect(() => {
     const fetchAllPeopleWithStatus = async () => {
@@ -28,6 +27,18 @@ export default function AllPeopleComponent() {
     }
   }, [user]);
 
+  useEffect(() => {
+    if (searchText.trim() === '') {
+      setFilteredPeople(people);
+    } else {
+      setFilteredPeople(
+        people.filter(person =>
+          person.username.toLowerCase().includes(searchText.toLowerCase())
+        )
+      );
+    }
+  }, [searchText, people]);
+
   const handleSendRequest = async (receiverId) => {
     try {
       await axios.post(`${API_BASE_URL}Friends/send`, {
@@ -43,17 +54,18 @@ export default function AllPeopleComponent() {
   };
 
   const handleRemoveFriend = async (friendId) => {
-    console.log("Removing friend with FriendId:", friendId);
     try {
-      await axios.post(`${API_BASE_URL}Friends/remove`, {
-        FriendId: friendId
-      });
-      setPeople((prevPeople) => prevPeople.map((person) =>
-        person.friendId === friendId ? { ...person, friendStatus: "None", friendId: null } : person
-      ));
-      setFilteredPeople((prevPeople) => prevPeople.map((person) =>
-        person.friendId === friendId ? { ...person, friendStatus: "None", friendId: null } : person
-      ));
+      await axios.post(`${API_BASE_URL}Friends/remove`, { FriendId: friendId });
+      setPeople(prevPeople =>
+        prevPeople.map(person =>
+          person.friendId === friendId ? { ...person, friendStatus: "None", friendId: null } : person
+        )
+      );
+      setFilteredPeople(prevPeople =>
+        prevPeople.map(person =>
+          person.friendId === friendId ? { ...person, friendStatus: "None", friendId: null } : person
+        )
+      );
       Alert.alert("Success", "Friend removed successfully.");
     } catch (error) {
       console.error("Error removing friend:", error.response?.data || error.message);
@@ -61,28 +73,8 @@ export default function AllPeopleComponent() {
     }
   };
 
-  const handleSearch = (text) => {
-    setSearchText(text);
-    if (text.trim() === '') {
-      setFilteredPeople(people); // Reset to original list if search is cleared
-    } else {
-      const filteredData = people.filter((person) =>
-        person.username.toLowerCase().includes(text.toLowerCase())
-      );
-      setFilteredPeople(filteredData);
-    }
-  };
-
   return (
     <View style={styles.container}>
-      {/* Static Search Bar */}
-      <TextInput
-        style={styles.searchBar}
-        placeholder="Search for users..."
-        value={searchText}
-        onChangeText={handleSearch}
-      />
-      {/* User List */}
       <FlatList
         data={filteredPeople}
         keyExtractor={(item) => item.userId.toString()}
@@ -136,15 +128,6 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingHorizontal: 10,
     backgroundColor: '#fff',
-  },
-  searchBar: {
-    height: 40,
-    borderColor: '#ccc',
-    borderWidth: 1,
-    borderRadius: 5,
-    paddingHorizontal: 10,
-    marginBottom: 10,
-    marginTop: 10,
   },
   personContainer: {
     flexDirection: 'row',
