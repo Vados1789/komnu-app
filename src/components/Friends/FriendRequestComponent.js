@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useContext } from 'react';
-import { View, Text, FlatList, StyleSheet, Image, Button, Alert } from 'react-native';
+import { View, Text, FlatList, StyleSheet, Image, TouchableOpacity, Alert } from 'react-native';
 import axios from 'axios';
 import { AuthContext } from '../../context/AuthContext';
 import API_BASE_URL from '../../config/apiConfig.js';
@@ -86,8 +86,12 @@ export default function FriendRequestComponent({ searchText }) {
           />
           <Text style={styles.usernameText}>{item.username || 'No Username Available'}</Text>
           <View style={styles.buttonContainer}>
-            <Button title="Accept" onPress={() => handleAccept(item.friendId)} />
-            <Button title="Reject" color="red" onPress={() => handleReject(item.friendId)} />
+            <TouchableOpacity style={styles.acceptButton} onPress={() => handleAccept(item.friendId)}>
+              <Text style={styles.buttonText}>Accept</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.rejectButton} onPress={() => handleReject(item.friendId)}>
+              <Text style={styles.buttonText}>Reject</Text>
+            </TouchableOpacity>
           </View>
         </View>
       )}
@@ -116,6 +120,24 @@ const styles = StyleSheet.create({
   buttonContainer: {
     flexDirection: 'row',
     gap: 10,
+  },
+  acceptButton: {
+    backgroundColor: '#007bff',
+    paddingVertical: 5,
+    paddingHorizontal: 15,
+    borderRadius: 5,
+    marginRight: 5,
+  },
+  rejectButton: {
+    backgroundColor: 'red',
+    paddingVertical: 5,
+    paddingHorizontal: 15,
+    borderRadius: 5,
+  },
+  buttonText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '600',
   },
   errorText: {
     color: 'red',
