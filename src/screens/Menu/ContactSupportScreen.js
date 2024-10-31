@@ -1,9 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import { View, Text, TextInput, Button, StyleSheet, Alert } from 'react-native';
 import * as MailComposer from 'expo-mail-composer';
+import { AuthContext } from '../../context/AuthContext';
 
 export default function ContactSupportScreen() {
   const [emailBody, setEmailBody] = useState('');
+  const { user } = useContext(AuthContext); // Access user details
 
   const handleSendEmail = async () => {
     if (emailBody.trim() === '') {
@@ -18,27 +20,31 @@ export default function ContactSupportScreen() {
         return;
       }
 
-      MailComposer.composeAsync({
-        recipients: ['support@example.com'], // Replace with your support email
+      const emailContent = `
+      Support request from:
+      Username: ${user?.username || 'N/A'}
+      Email: ${user?.email || 'N/A'}
+      Message:
+      ${emailBody}
+      `;
+
+      await MailComposer.composeAsync({
+        recipients: ['h5komnu@gmail.com'], // Support email
         subject: 'Support Request',
-        body: emailBody,
-      }).then(result => {
-        if (result.status === 'sent') {
-          Alert.alert('Success', 'Your message has been sent.');
-          setEmailBody(''); // Clear the input
-        } else {
-          Alert.alert('Error', 'Failed to send your message.');
-        }
+        body: emailContent,
       });
+
+      Alert.alert('Success', 'Your message has been prepared in your email app.');
+      setEmailBody(''); // Clear the input
     } catch (error) {
-      console.error('Error sending email:', error);
-      Alert.alert('Error', 'Unable to send email at this time.');
+      console.error('Error preparing email:', error);
+      Alert.alert('Error', 'Unable to prepare email at this time.');
     }
   };
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Write email to out support team</Text>
+      <Text style={styles.title}>Write an email to our support team</Text>
       <TextInput
         style={styles.textInput}
         placeholder="Write your message here..."
@@ -69,6 +75,6 @@ const styles = StyleSheet.create({
     padding: 10,
     marginBottom: 20,
     borderRadius: 5,
-    textAlignVertical: 'top', // Aligns text at the top
+    textAlignVertical: 'top',
   },
 });
