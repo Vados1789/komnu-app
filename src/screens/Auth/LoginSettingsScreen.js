@@ -55,8 +55,8 @@ export default function LoginSettingsScreen({ route, navigation }) {
         }
       );
 
-      Alert.alert('Success', 'Login settings saved successfully!');
-      navigation.navigate('MainTabs');
+      Alert.alert('Success', 'Login settings saved successfully! Please log in.');
+      navigation.navigate('Login'); // Navigate to Login screen instead of MainTabs
     } catch (error) {
       console.error("Error saving login settings:", error);
       if (error.response && error.response.data) {

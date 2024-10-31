@@ -30,7 +30,6 @@ export default function LoginScreen({ navigation }) {
         // Login without 2FA
         await login(response.data.user);
         navigation.replace('MainTabs');
-        Alert.alert('Success', 'Login successful!');
       }
     } catch (error) {
       console.error("Error during login:", error);
