@@ -10,21 +10,22 @@ export default function FriendRequestComponent() {
   const [friendRequests, setFriendRequests] = useState([]);
   const [error, setError] = useState(null);
 
-  useEffect(() => {
-    const fetchFriendRequests = async () => {
-      if (user && user.userId) {
-        try {
-          const response = await axios.get(`${API_BASE_URL}Friends/requests/${user.userId}`);
-          console.log('Getting friend requests data received:', response.data);
-          setFriendRequests(response.data);
-          setError(null); // Reset error if fetch is successful
-        } catch (error) {
-          console.error("Error fetching friend requests:", error);
-          setError("An error occurred while fetching friend requests.");
-        }
+  // Function to fetch friend requests
+  const fetchFriendRequests = async () => {
+    if (user && user.userId) {
+      try {
+        const response = await axios.get(`${API_BASE_URL}Friends/requests/${user.userId}`);
+        console.log('Getting friend requests data received:', response.data);
+        setFriendRequests(response.data);
+        setError(null);
+      } catch (error) {
+        console.error("Error fetching friend requests:", error);
+        setError("An error occurred while fetching friend requests.");
       }
-    };
+    }
+  };
 
+  useEffect(() => {
     fetchFriendRequests();
   }, [user]);
 
@@ -32,26 +33,28 @@ export default function FriendRequestComponent() {
     try {
       await axios.post(
         `${API_BASE_URL}Friends/confirm`,
-        { friendId }, // Send as JSON object
+        { friendId },
         { headers: { 'Content-Type': 'application/json' } }
       );
-      setFriendRequests(friendRequests.filter(request => request.friendId !== friendId));
       Alert.alert("Success", "Friend request accepted.");
+      // Update the list after accepting the request
+      setFriendRequests(friendRequests.filter(request => request.friendId !== friendId));
     } catch (error) {
       console.error("Error accepting friend request:", error);
       Alert.alert("Error", "Unable to accept friend request.");
     }
   };
 
-const handleReject = async (friendId) => {
+  const handleReject = async (friendId) => {
     try {
       await axios.post(
         `${API_BASE_URL}Friends/remove`,
-        { friendId }, // Send as JSON object
+        { friendId },
         { headers: { 'Content-Type': 'application/json' } }
       );
-      setFriendRequests(friendRequests.filter(request => request.friendId !== friendId));
       Alert.alert("Success", "Friend request rejected.");
+      // Update the list after rejecting the request
+      setFriendRequests(friendRequests.filter(request => request.friendId !== friendId));
     } catch (error) {
       console.error("Error rejecting friend request:", error);
       Alert.alert("Error", "Unable to reject friend request.");
@@ -108,7 +111,7 @@ const styles = StyleSheet.create({
   },
   buttonContainer: {
     flexDirection: 'row',
-    gap: 10, // Add some space between buttons
+    gap: 10,
   },
   errorText: {
     color: 'red',

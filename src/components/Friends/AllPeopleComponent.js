@@ -75,17 +75,17 @@ export default function AllPeopleComponent() {
 
   return (
     <View style={styles.container}>
+      {/* Static Search Bar */}
+      <TextInput
+        style={styles.searchBar}
+        placeholder="Search for users..."
+        value={searchText}
+        onChangeText={handleSearch}
+      />
+      {/* User List */}
       <FlatList
         data={filteredPeople}
         keyExtractor={(item) => item.userId.toString()}
-        ListHeaderComponent={
-          <TextInput
-            style={styles.searchBar}
-            placeholder="Search for users..."
-            value={searchText}
-            onChangeText={handleSearch}
-          />
-        }
         renderItem={({ item }) => (
           <View style={styles.personContainer}>
             <Image
@@ -144,6 +144,7 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     paddingHorizontal: 10,
     marginBottom: 10,
+    marginTop: 10,
   },
   personContainer: {
     flexDirection: 'row',
