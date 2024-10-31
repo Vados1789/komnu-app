@@ -34,7 +34,10 @@ export default function MenuScreen() {
           <Text style={styles.menuText}>Settings</Text>
           <Ionicons name="chevron-forward-outline" size={20} color="gray" style={styles.arrow} />
         </TouchableOpacity>
-        <TouchableOpacity style={styles.menuItem}>
+        <TouchableOpacity
+          style={styles.menuItem}
+          onPress={() => navigation.navigate('ContactSupport')}
+        >
           <Ionicons name="chatbox-ellipses-outline" size={24} color="black" style={styles.icon} />
           <Text style={styles.menuText}>Contact Support</Text>
           <Ionicons name="chevron-forward-outline" size={20} color="gray" style={styles.arrow} />
