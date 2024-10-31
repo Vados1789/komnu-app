@@ -17,6 +17,7 @@ export default function FriendsListComponent({ searchText }) {
           const response = await axios.get(`${API_BASE_URL}Friends/list/${user.userId}`);
           console.log("Friends data received:", response.data);
           setFriends(response.data);
+          setFilteredFriends(response.data); // Initialize filtered list
         } catch (error) {
           console.error("Error fetching friends list:", error);
         }
@@ -26,6 +27,7 @@ export default function FriendsListComponent({ searchText }) {
     fetchFriends();
   }, [user]);
 
+  // Update filtered friends whenever searchText changes
   useEffect(() => {
     if (searchText.trim() === '') {
       setFilteredFriends(friends);
@@ -40,10 +42,11 @@ export default function FriendsListComponent({ searchText }) {
 
   const handleRemoveFriend = async (friendId) => {
     try {
-      await axios.post(`${API_BASE_URL}Friends/remove`, {
-        friendId
-      });
-      setFriends(friends.filter(friend => friend.FriendId !== friendId));
+      await axios.post(`${API_BASE_URL}Friends/remove`, { friendId });
+      // Update friends and filteredFriends after successful removal
+      const updatedFriends = friends.filter(friend => friend.friendId !== friendId);
+      setFriends(updatedFriends);
+      setFilteredFriends(updatedFriends);
       Alert.alert("Success", "Friend removed successfully.");
     } catch (error) {
       console.error("Error removing friend:", error);
