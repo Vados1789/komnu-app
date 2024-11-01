@@ -1,27 +1,35 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, Button, FlatList, TouchableOpacity } from 'react-native';
-import axios from 'axios';
+import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
 import PostListComponent from '../../components/Posts/PostListComponent';
+import axios from 'axios';
+import API_BASE_URL from '../../config/apiConfig';
 
 export default function PostsScreen() {
-  const [posts, setPosts] = useState([]);
+  const navigation = useNavigation();
+  const [posts, setPosts] = useState([]); // Add useState to manage posts data
 
+  // Fetch posts from the API
   const fetchPosts = async () => {
     try {
-      const response = await axios.get('http://localhost:5000/api/posts'); // Update with your API URL
+      const response = await axios.get(`${API_BASE_URL}posts`);
       setPosts(response.data);
     } catch (error) {
       console.error("Error fetching posts:", error);
     }
   };
 
+  // Call fetchPosts when the component mounts
   useEffect(() => {
     fetchPosts();
   }, []);
 
   return (
     <View style={styles.container}>
-      <TouchableOpacity style={styles.createPostButton}>
+      <TouchableOpacity
+        style={styles.createPostButton}
+        onPress={() => navigation.navigate('CreatePostScreen')}
+      >
         <Text style={styles.buttonText}>Create Post</Text>
       </TouchableOpacity>
       <PostListComponent posts={posts} />
@@ -30,10 +38,7 @@ export default function PostsScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 10,
-  },
+  container: { flex: 1, padding: 10 },
   createPostButton: {
     backgroundColor: 'blue',
     padding: 10,
@@ -41,8 +46,5 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 10,
   },
-  buttonText: {
-    color: 'white',
-    fontWeight: 'bold',
-  },
+  buttonText: { color: 'white', fontWeight: 'bold' },
 });
