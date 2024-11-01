@@ -1,10 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import { View, Text, TextInput, Button, StyleSheet, Alert, Image, TouchableOpacity } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import axios from 'axios';
 import API_BASE_URL from '../../config/apiConfig';
+import { AuthContext } from '../../context/AuthContext';
 
 export default function CreatePostScreen({ navigation }) {
+    const { user } = useContext(AuthContext); // Access the user context
   const [content, setContent] = useState('');
   const [imageUri, setImageUri] = useState(null);
 
@@ -31,7 +33,7 @@ export default function CreatePostScreen({ navigation }) {
 
     try {
       const data = new FormData();
-      data.append('userId', '54'); // Replace with actual logged-in user ID
+      data.append('userId', user.userId); // Replace with actual logged-in user ID
       data.append('content', content);
 
       if (imageUri) {
