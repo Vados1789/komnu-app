@@ -5,8 +5,8 @@ import updateUserProfilePicture from '../../components/Profile/UpdateUserProfile
 import * as ImagePicker from 'expo-image-picker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Icon from 'react-native-vector-icons/MaterialIcons';
+import IMAGE_BASE_URL from '../../config/imageConfig';
 
-const IMAGE_BASE_URL = 'http://10.71.106.179:5202';
 const DEFAULT_IMAGE_URL = 'https://via.placeholder.com/100';
 
 export default function ProfileScreen() {
