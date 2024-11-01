@@ -2,22 +2,37 @@ import { Alert } from 'react-native';
 import axios from 'axios';
 import API_BASE_URL from '../../config/apiConfig';
 
+const getMimeType = (uri) => {
+  const extension = uri.split('.').pop().toLowerCase();
+  switch (extension) {
+    case 'jpg':
+    case 'jpeg':
+      return 'image/jpeg';
+    case 'png':
+      return 'image/png';
+    case 'gif':
+      return 'image/gif';
+    default:
+      return 'application/octet-stream';
+  }
+};
+
 const updateUserProfilePicture = async (userId, newProfilePictureUri) => {
   if (!userId) {
     Alert.alert('Invalid User', 'User ID is required to update the profile picture.');
-    return;
+    return null;
   }
   
   if (!newProfilePictureUri) {
-    Alert.alert('No picture selected', 'Please select a new profile picture to save.');
-    return;
+    Alert.alert('No Picture Selected', 'Please select a new profile picture to save.');
+    return null;
   }
 
   const formData = new FormData();
   formData.append('profilePicture', {
     uri: newProfilePictureUri,
     name: newProfilePictureUri.split('/').pop(),
-    type: 'image/jpeg', // You might want to make this dynamic based on the file type
+    type: getMimeType(newProfilePictureUri),
   });
 
   try {
@@ -32,19 +47,29 @@ const updateUserProfilePicture = async (userId, newProfilePictureUri) => {
       }
     );
 
-    console.log('Response status:', response.status);
+    console.log('Response received:', response);
 
-    if (response.status === 200) {
-      console.log('Profile picture update response:', response.data);
-      return { ...response.data.user, profilePicture: response.data.ProfilePictureUrl };
+    if (response.status === 200 && response.data) {
+      const profilePictureUrl = response.data.ProfilePictureUrl || response.data.user?.profilePicture || response.data.profilePicture;
+
+      if (profilePictureUrl) {
+        console.log('Profile picture updated successfully:', profilePictureUrl);
+        return {
+          ...response.data.user,
+          profilePicture: profilePictureUrl,
+        };
+      } else {
+        Alert.alert('Upload Successful', 'But profile picture URL is missing. Try reloading.');
+        return null;
+      }
     } else {
-      Alert.alert('Upload Failed', 'There was an error updating your profile picture.');
+      Alert.alert('Upload Failed', 'Unexpected response status or data format.');
       return null;
     }
   } catch (error) {
     if (error.response) {
-      console.error('Server responded with:', error.response.status);
-      Alert.alert('Error', `Server responded with status: ${error.response.status}`);
+      console.error('Server responded with an error:', error.response.status, error.response.data);
+      Alert.alert('Error', `Server error: ${error.response.status}. ${error.response.data?.message || 'Unknown server error'}`);
     } else if (error.request) {
       console.error('No response received:', error.request);
       Alert.alert('Error', 'No response from server. Please try again later.');
