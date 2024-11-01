@@ -20,22 +20,31 @@ export default function ProfileScreen({ navigation }) {
 
   useEffect(() => {
     const requestPermission = async () => {
-      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      const { status } = await ImagePicker.requestCameraPermissionsAsync();
       if (status !== 'granted') {
-        Alert.alert('Permission required', 'You need to grant permission to access the image library.');
+        Alert.alert('Permission required', 'You need to grant permission to access the camera.');
       }
     };
 
     requestPermission();
   }, []);
 
-  const pickImage = async () => {
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      aspect: [1, 1],
-      quality: 1,
-    });
+  const pickImage = async (source) => {
+    let result;
+    if (source === 'camera') {
+      result = await ImagePicker.launchCameraAsync({
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 1,
+      });
+    } else {
+      result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 1,
+      });
+    }
 
     if (!result.canceled) {
       setNewProfilePicture(result.assets[0].uri);
@@ -54,13 +63,11 @@ export default function ProfileScreen({ navigation }) {
       const updatedUserData = await updateUserProfilePicture(user.userId, newProfilePicture);
 
       if (updatedUserData) {
-        // Save updated user data in AsyncStorage
         await AsyncStorage.setItem('user', JSON.stringify(updatedUserData));
 
-        // Update local user state and force image re-render
         setLocalUser(updatedUserData);
-        setImageKey(prevKey => prevKey + 1); // Force re-render of the Image component
-        setNewProfilePicture(null); // Clear selected picture URI
+        setImageKey(prevKey => prevKey + 1);
+        setNewProfilePicture(null);
 
         Alert.alert('Profile Updated', 'Your profile picture has been updated.');
       } else {
@@ -92,18 +99,22 @@ export default function ProfileScreen({ navigation }) {
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
-      {/* Header with Toggleable Background */}
       <TouchableOpacity onPress={toggleHeaderBackground}>
         <View style={[styles.headerContainer, { backgroundColor: headerBackgroundColor }]}>
           <Image
-            key={imageKey} // Force re-render when key changes
+            key={imageKey}
             source={{
               uri: newProfilePicture || `${IMAGE_BASE_URL}${localUser.profilePicture}?${new Date().getTime()}` || DEFAULT_IMAGE_URL,
             }}
             style={styles.profilePicture}
           />
-          <TouchableOpacity style={styles.changePictureButton} onPress={pickImage}>
-            <Text style={styles.changePictureButtonText}>Change Picture</Text>
+          
+          <TouchableOpacity style={styles.changePictureButton} onPress={() => pickImage('library')}>
+            <Text style={styles.changePictureButtonText}>Choose from Library</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.changePictureButton} onPress={() => pickImage('camera')}>
+            <Text style={styles.changePictureButtonText}>Take a Photo</Text>
           </TouchableOpacity>
 
           {uploading ? (
@@ -119,7 +130,6 @@ export default function ProfileScreen({ navigation }) {
         </View>
       </TouchableOpacity>
 
-      {/* Bio Section with Toggleable Background */}
       <TouchableOpacity onPress={toggleBioBackground}>
         <View style={[styles.bioContainer, { backgroundColor: bioBackgroundColor }]}>
           <Text style={styles.bio}>{localUser.bio || 'No bio available'}</Text>
@@ -170,29 +180,29 @@ const styles = StyleSheet.create({
     height: 120, 
     borderRadius: 60, 
     borderWidth: 2, 
-    borderColor: '#007bff', // Blue border for profile picture
+    borderColor: '#007bff', 
     marginBottom: 10 
   },
   changePictureButton: { 
-    backgroundColor: '#007bff', // Blue background for change picture button
+    backgroundColor: '#007bff', 
     paddingVertical: 6, 
     paddingHorizontal: 15, 
     borderRadius: 5, 
     marginVertical: 10 
   },
   changePictureButtonText: { 
-    color: '#fff', // White text color for button
+    color: '#fff', 
     fontWeight: 'bold' 
   },
   saveButton: { 
-    backgroundColor: '#28a745', // Green background for save button
+    backgroundColor: '#28a745', 
     borderRadius: 5, 
     padding: 10, 
     alignItems: 'center', 
     marginTop: 10 
   },
   saveButtonText: { 
-    color: '#fff', // White text color for save button
+    color: '#fff', 
     fontWeight: 'bold' 
   },
   username: { 
@@ -218,7 +228,7 @@ const styles = StyleSheet.create({
   infoContainer: { 
     padding: 15, 
     borderRadius: 10, 
-    backgroundColor: '#f9f9f9' // Light gray background for info container
+    backgroundColor: '#f9f9f9' 
   },
   infoTitle: { 
     fontSize: 18, 
