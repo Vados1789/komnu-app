@@ -9,6 +9,7 @@ import MainTabNavigator from '../screens/Main/MainTabNavigator';
 import ContactSupportScreen from '../screens/Menu/ContactSupportScreen';
 import CreatePostScreen from '../screens/Posts/CreatePostScreen';
 import EditPostScreen from '../screens/Posts/EditPostScreen';
+import FullScreenImageScreen from '../screens/Posts/FullScreenImageScreen';
 
 const Stack = createStackNavigator();
 
@@ -24,6 +25,7 @@ export default function MainNavigator() {
         <Stack.Screen name="ContactSupport" component={ContactSupportScreen} options={{ title: 'Contact Support' }} />
         <Stack.Screen name="CreatePostScreen" component={CreatePostScreen} options={{ title: 'Create Post' }} />
         <Stack.Screen name="EditPostScreen" component={EditPostScreen} options={{ title: 'Edit Post' }} />
+        <Stack.Screen name="FullScreenImageScreen" component={FullScreenImageScreen} options={{ headerShown: false }} />
       </Stack.Navigator>
     </NavigationContainer>
   );
