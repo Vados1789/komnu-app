@@ -3,16 +3,9 @@ import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import PostsScreen from '../Posts/PostsScreen';
 
 export default function HomeScreen() {
-  // const handleCreatePost = () => {
-  //   // Future functionality for creating a post
-  //   console.log("Create Post button pressed!");
-  // };
 
   return (
     <View style={styles.container}>
-      {/* <TouchableOpacity style={styles.createPostButton} onPress={handleCreatePost}>
-        <Text style={styles.buttonText}>Create Post</Text>
-      </TouchableOpacity> */}
       <View style={styles.postsContainer}>
         <PostsScreen />
       </View>
