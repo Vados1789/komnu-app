@@ -3,6 +3,7 @@ import { View, Text, Image, StyleSheet } from 'react-native';
 import IMAGE_BASE_URL from '../../config/imageConfig.js';
 
 export default function PostComponent({ post }) {
+    console.log('Post interest:', post);
   return (
     <View style={styles.postContainer}>
       <View style={styles.userInfo}>
@@ -26,7 +27,7 @@ export default function PostComponent({ post }) {
         />
       ) : null}
       <Text style={styles.createdAt}>
-        {post.created_at ? new Date(post.created_at).toLocaleString() : 'Unknown Date'}
+        {post.created_at ? new Date(post.createdAt).toLocaleString() : 'Unknown Date'}
       </Text>
     </View>
   );

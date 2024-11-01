@@ -1,28 +1,29 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
-import PostListComponent from '../../components/Posts/PostListComponent';
+import { View, Text, TouchableOpacity, StyleSheet, Alert } from 'react-native';
 import axios from 'axios';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
+import PostListComponent from '../../components/Posts/PostListComponent';
 import API_BASE_URL from '../../config/apiConfig';
 
 export default function PostsScreen() {
   const navigation = useNavigation();
-  const [posts, setPosts] = useState([]); // Add useState to manage posts data
+  const [posts, setPosts] = useState([]);
 
-  // Fetch posts from the API
   const fetchPosts = async () => {
     try {
       const response = await axios.get(`${API_BASE_URL}posts`);
       setPosts(response.data);
     } catch (error) {
       console.error("Error fetching posts:", error);
+      Alert.alert('Error', 'Could not load posts.');
     }
   };
 
-  // Call fetchPosts when the component mounts
-  useEffect(() => {
-    fetchPosts();
-  }, []);
+  useFocusEffect(
+    React.useCallback(() => {
+      fetchPosts();
+    }, [])
+  );
 
   return (
     <View style={styles.container}>
