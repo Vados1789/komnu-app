@@ -12,6 +12,10 @@ export default function PostComponent({ post }) {
     navigation.navigate('EditPostScreen', { post });
   };
 
+  const handleImagePress = () => {
+    navigation.navigate('FullScreenImageScreen', { imageUri: `${IMAGE_BASE_URL}${post.imagePath}` });
+  };
+
   return (
     <View style={styles.postContainer}>
       <View style={styles.userInfo}>
@@ -25,11 +29,12 @@ export default function PostComponent({ post }) {
       </View>
       <Text style={styles.content}>{post.content || 'No content available'}</Text>
       {post.imagePath ? (
-        <Image source={{ uri: `${IMAGE_BASE_URL}${post.imagePath}` }} style={styles.postImage} />
+        <TouchableOpacity onPress={handleImagePress}>
+          <Image source={{ uri: `${IMAGE_BASE_URL}${post.imagePath}` }} style={styles.postImage} />
+        </TouchableOpacity>
       ) : null}
       <Text style={styles.createdAt}>{new Date(post.createdAt).toLocaleString()}</Text>
 
-      {/* Show edit button if the current user is the owner */}
       {user?.userId === post.userId && (
         <TouchableOpacity style={styles.editButton} onPress={handleEditPress}>
           <Text style={styles.editButtonText}>Edit</Text>
