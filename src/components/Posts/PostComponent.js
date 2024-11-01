@@ -27,7 +27,7 @@ export default function PostComponent({ post }) {
         />
       ) : null}
       <Text style={styles.createdAt}>
-        {post.created_at ? new Date(post.createdAt).toLocaleString() : 'Unknown Date'}
+        {post.createdAt ? new Date(post.createdAt).toLocaleString() : 'Unknown Date'}
       </Text>
     </View>
   );
