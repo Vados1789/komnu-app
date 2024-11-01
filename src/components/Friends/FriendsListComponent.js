@@ -5,9 +5,10 @@ import { AuthContext } from '../../context/AuthContext';
 import API_BASE_URL from '../../config/apiConfig.js';
 import IMAGE_BASE_URL from '../../config/imageConfig.js';
 
-export default function FriendsListComponent() {
+export default function FriendsListComponent({ searchText }) {
   const { user } = useContext(AuthContext);
   const [friends, setFriends] = useState([]);
+  const [filteredFriends, setFilteredFriends] = useState([]);
 
   useEffect(() => {
     const fetchFriends = async () => {
@@ -16,6 +17,7 @@ export default function FriendsListComponent() {
           const response = await axios.get(`${API_BASE_URL}Friends/list/${user.userId}`);
           console.log("Friends data received:", response.data);
           setFriends(response.data);
+          setFilteredFriends(response.data); // Initialize filtered list
         } catch (error) {
           console.error("Error fetching friends list:", error);
         }
@@ -25,12 +27,26 @@ export default function FriendsListComponent() {
     fetchFriends();
   }, [user]);
 
+  // Update filtered friends whenever searchText changes
+  useEffect(() => {
+    if (searchText.trim() === '') {
+      setFilteredFriends(friends);
+    } else {
+      setFilteredFriends(
+        friends.filter(friend =>
+          friend.username.toLowerCase().includes(searchText.toLowerCase())
+        )
+      );
+    }
+  }, [searchText, friends]);
+
   const handleRemoveFriend = async (friendId) => {
     try {
-      await axios.post(`${API_BASE_URL}Friends/remove`, {
-        friendId
-      });
-      setFriends(friends.filter(friend => friend.FriendId !== friendId));
+      await axios.post(`${API_BASE_URL}Friends/remove`, { friendId });
+      // Update friends and filteredFriends after successful removal
+      const updatedFriends = friends.filter(friend => friend.friendId !== friendId);
+      setFriends(updatedFriends);
+      setFilteredFriends(updatedFriends);
       Alert.alert("Success", "Friend removed successfully.");
     } catch (error) {
       console.error("Error removing friend:", error);
@@ -40,7 +56,7 @@ export default function FriendsListComponent() {
 
   return (
     <FlatList
-      data={friends}
+      data={filteredFriends}
       keyExtractor={(item) => item.friendId.toString()}
       renderItem={({ item }) => (
         <View style={styles.friendContainer}>

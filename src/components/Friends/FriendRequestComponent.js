@@ -1,26 +1,24 @@
 import React, { useEffect, useState, useContext } from 'react';
-import { View, Text, FlatList, StyleSheet, Image, Button, Alert } from 'react-native';
+import { View, Text, FlatList, StyleSheet, Image, TouchableOpacity, Alert } from 'react-native';
 import axios from 'axios';
 import { AuthContext } from '../../context/AuthContext';
 import API_BASE_URL from '../../config/apiConfig.js';
 import IMAGE_BASE_URL from '../../config/imageConfig.js';
 
-export default function FriendRequestComponent() {
+export default function FriendRequestComponent({ searchText }) {
   const { user } = useContext(AuthContext);
   const [friendRequests, setFriendRequests] = useState([]);
-  const [error, setError] = useState(null);
+  const [filteredRequests, setFilteredRequests] = useState([]);
 
   useEffect(() => {
     const fetchFriendRequests = async () => {
       if (user && user.userId) {
         try {
           const response = await axios.get(`${API_BASE_URL}Friends/requests/${user.userId}`);
-          console.log('Getting friend requests data received:', response.data);
           setFriendRequests(response.data);
-          setError(null); // Reset error if fetch is successful
+          setFilteredRequests(response.data);
         } catch (error) {
           console.error("Error fetching friend requests:", error);
-          setError("An error occurred while fetching friend requests.");
         }
       }
     };
@@ -28,43 +26,52 @@ export default function FriendRequestComponent() {
     fetchFriendRequests();
   }, [user]);
 
+  useEffect(() => {
+    if (searchText.trim() === '') {
+      setFilteredRequests(friendRequests);
+    } else {
+      const lowercasedSearchText = searchText.toLowerCase();
+      setFilteredRequests(
+        friendRequests.filter(request =>
+          request.username.toLowerCase().includes(lowercasedSearchText)
+        )
+      );
+    }
+  }, [searchText, friendRequests]);
+
   const handleAccept = async (friendId) => {
     try {
       await axios.post(
         `${API_BASE_URL}Friends/confirm`,
-        { friendId }, // Send as JSON object
+        { friendId },
         { headers: { 'Content-Type': 'application/json' } }
       );
-      setFriendRequests(friendRequests.filter(request => request.friendId !== friendId));
       Alert.alert("Success", "Friend request accepted.");
+      setFriendRequests(friendRequests.filter(request => request.friendId !== friendId));
     } catch (error) {
       console.error("Error accepting friend request:", error);
       Alert.alert("Error", "Unable to accept friend request.");
     }
   };
 
-const handleReject = async (friendId) => {
+  const handleReject = async (friendId) => {
     try {
       await axios.post(
         `${API_BASE_URL}Friends/remove`,
-        { friendId }, // Send as JSON object
+        { friendId },
         { headers: { 'Content-Type': 'application/json' } }
       );
-      setFriendRequests(friendRequests.filter(request => request.friendId !== friendId));
       Alert.alert("Success", "Friend request rejected.");
+      setFriendRequests(friendRequests.filter(request => request.friendId !== friendId));
     } catch (error) {
       console.error("Error rejecting friend request:", error);
       Alert.alert("Error", "Unable to reject friend request.");
     }
   };
 
-  if (error) {
-    return <Text style={styles.errorText}>{error}</Text>;
-  }
-
   return (
     <FlatList
-      data={friendRequests}
+      data={filteredRequests}
       keyExtractor={(item, index) => (item.friendId ? item.friendId.toString() : `temp-key-${index}`)}
       ListEmptyComponent={<Text>No friend requests available.</Text>}
       renderItem={({ item }) => (
@@ -79,8 +86,12 @@ const handleReject = async (friendId) => {
           />
           <Text style={styles.usernameText}>{item.username || 'No Username Available'}</Text>
           <View style={styles.buttonContainer}>
-            <Button title="Accept" onPress={() => handleAccept(item.friendId)} />
-            <Button title="Reject" color="red" onPress={() => handleReject(item.friendId)} />
+            <TouchableOpacity style={styles.acceptButton} onPress={() => handleAccept(item.friendId)}>
+              <Text style={styles.buttonText}>Accept</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.rejectButton} onPress={() => handleReject(item.friendId)}>
+              <Text style={styles.buttonText}>Reject</Text>
+            </TouchableOpacity>
           </View>
         </View>
       )}
@@ -108,7 +119,25 @@ const styles = StyleSheet.create({
   },
   buttonContainer: {
     flexDirection: 'row',
-    gap: 10, // Add some space between buttons
+    gap: 10,
+  },
+  acceptButton: {
+    backgroundColor: '#007bff',
+    paddingVertical: 5,
+    paddingHorizontal: 15,
+    borderRadius: 5,
+    marginRight: 5,
+  },
+  rejectButton: {
+    backgroundColor: 'red',
+    paddingVertical: 5,
+    paddingHorizontal: 15,
+    borderRadius: 5,
+  },
+  buttonText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '600',
   },
   errorText: {
     color: 'red',

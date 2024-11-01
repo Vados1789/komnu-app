@@ -6,6 +6,8 @@ import RegisterScreen from '../screens/Auth/RegisterScreen';
 import LoginSettingsScreen from '../screens/Auth/LoginSettingsScreen';
 import TwoFaVerificationScreen from '../screens/Auth/TwoFaVerificationScreen';
 import MainTabNavigator from '../screens/Main/MainTabNavigator';
+import ContactSupportScreen from '../screens/Menu/ContactSupportScreen';
+import CreatePostScreen from '../screens/Posts/CreatePostScreen';
 
 const Stack = createStackNavigator();
 
@@ -18,6 +20,8 @@ export default function MainNavigator() {
         <Stack.Screen name="LoginSettings" component={LoginSettingsScreen} />
         <Stack.Screen name="TwoFaVerification" component={TwoFaVerificationScreen} />
         <Stack.Screen name="MainTabs" component={MainTabNavigator} options={{ headerShown: false }} />
+        <Stack.Screen name="ContactSupport" component={ContactSupportScreen} options={{ title: 'Contact Support' }} />
+        <Stack.Screen name="CreatePostScreen" component={CreatePostScreen} options={{ title: 'Create Post' }} />
       </Stack.Navigator>
     </NavigationContainer>
   );

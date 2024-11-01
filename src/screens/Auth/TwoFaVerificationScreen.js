@@ -25,7 +25,6 @@ export default function TwoFaVerificationScreen({ route, navigation }) {
         // Log the user data in the context after successful verification
         await login(response.data.user);
 
-        Alert.alert('Success', 'Verification successful!');
         navigation.replace('MainTabs'); // Navigate to the main screen
       }
     } catch (error) {
