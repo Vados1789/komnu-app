@@ -32,11 +32,22 @@
    ```bash
    npm install
    ```
+   
+3. **Set Up Server IP**:
+   - Run `ipconfig` in your command prompt or terminal to find your local IP address.
+   - Update the `API_BASE_URL` in `appsettings.json` to match your IP address:
+     ```json
+     "API_BASE_URL": "http://YOUR_LOCAL_IP:5000"
+     ```
+   - Replace `YOUR_LOCAL_IP` with the IPv4 address from `ipconfig`. This setup ensures the API is accessible on your network.
+   
 
-3. **Run the app**:
+4. **Run the app**:
    ```bash
    npm start
    ```
+
+   
 
 4. **Backend Setup** (optional):
    - Follow the backend setup instructions if you plan to run the C# API locally.
