@@ -1,12 +1,27 @@
-import React, { useContext } from 'react';
+import React, { useContext, useState, useEffect } from 'react';
 import { View, Text, Image, StyleSheet, TouchableOpacity } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import { AuthContext } from '../../context/AuthContext';
+import axios from 'axios';
+import API_BASE_URL from '../../config/apiConfig';
 import IMAGE_BASE_URL from '../../config/imageConfig.js';
+import { AuthContext } from '../../context/AuthContext';
 
 export default function PostComponent({ post }) {
   const { user } = useContext(AuthContext);
   const navigation = useNavigation();
+  const [commentCount, setCommentCount] = useState(0);
+
+  useEffect(() => {
+    const fetchCommentCount = async () => {
+      try {
+        const response = await axios.get(`${API_BASE_URL}comments/${post.postId}/count`);
+        setCommentCount(response.data);
+      } catch (error) {
+        console.error('Error fetching comment count:', error);
+      }
+    };
+    fetchCommentCount();
+  }, [post.postId]);
 
   const handleEditPress = () => {
     navigation.navigate('EditPostScreen', { post });
@@ -14,6 +29,10 @@ export default function PostComponent({ post }) {
 
   const handleImagePress = () => {
     navigation.navigate('FullScreenImageScreen', { imageUri: `${IMAGE_BASE_URL}${post.imagePath}` });
+  };
+
+  const handleCommentsPress = () => {
+    navigation.navigate('CommentsScreen', { postId: post.postId });
   };
 
   return (
@@ -40,6 +59,11 @@ export default function PostComponent({ post }) {
           <Text style={styles.editButtonText}>Edit</Text>
         </TouchableOpacity>
       )}
+
+      {/* Comments Button */}
+      <TouchableOpacity style={styles.commentButton} onPress={handleCommentsPress}>
+        <Text style={styles.commentButtonText}>Comments ({commentCount})</Text>
+      </TouchableOpacity>
     </View>
   );
 }
@@ -88,5 +112,15 @@ const styles = StyleSheet.create({
   editButtonText: {
     color: '#fff',
     fontWeight: 'bold',
+  },
+  commentButton: {
+    marginTop: 10,
+    padding: 8,
+    backgroundColor: '#f0f0f0',
+    borderRadius: 5,
+    alignItems: 'center',
+  },
+  commentButtonText: {
+    color: '#007BFF',
   },
 });

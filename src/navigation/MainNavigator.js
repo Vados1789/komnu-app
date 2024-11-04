@@ -10,6 +10,7 @@ import ContactSupportScreen from '../screens/Menu/ContactSupportScreen';
 import CreatePostScreen from '../screens/Posts/CreatePostScreen';
 import EditPostScreen from '../screens/Posts/EditPostScreen';
 import FullScreenImageScreen from '../screens/Posts/FullScreenImageScreen';
+import CommentsScreen from '../screens/Posts/CommentsScreen';
 
 const Stack = createStackNavigator();
 
@@ -26,6 +27,7 @@ export default function MainNavigator() {
         <Stack.Screen name="CreatePostScreen" component={CreatePostScreen} options={{ title: 'Create Post' }} />
         <Stack.Screen name="EditPostScreen" component={EditPostScreen} options={{ title: 'Edit Post' }} />
         <Stack.Screen name="FullScreenImageScreen" component={FullScreenImageScreen} options={{ headerShown: false }} />
+        <Stack.Screen name="CommentsScreen" component={CommentsScreen} options={{ title: 'Comments' }} />
       </Stack.Navigator>
     </NavigationContainer>
   );
