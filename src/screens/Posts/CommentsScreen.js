@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useContext } from 'react';
-import { View, Text, TextInput, Button, StyleSheet, Image } from 'react-native';
+import { View, Text, TextInput, Button, StyleSheet, Image, FlatList, KeyboardAvoidingView } from 'react-native';
 import axios from 'axios';
 import { AuthContext } from '../../context/AuthContext';
 import API_BASE_URL from '../../config/apiConfig';
 import IMAGE_BASE_URL from '../../config/imageConfig';
-import CommentListComponent from '../../components/Posts/CommentListComponent';
+import CommentComponent from '../../components/Posts/CommentComponent';
 
 export default function CommentsScreen({ route }) {
   const { postId } = route.params;
@@ -31,13 +31,13 @@ export default function CommentsScreen({ route }) {
 
   const handleReply = async (replyContent, parentCommentId) => {
     if (!replyContent.trim()) return;
-  
+
     try {
       await axios.post(`${API_BASE_URL}comments`, {
         postId,
         userId: user.userId,
         content: replyContent,
-        parentCommentId // Pass the parent comment ID for replies
+        parentCommentId,
       });
       const response = await axios.get(`${API_BASE_URL}comments/${postId}`);
       setComments(response.data.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)));
@@ -48,7 +48,7 @@ export default function CommentsScreen({ route }) {
 
   const handleAddComment = async () => {
     if (!newComment.trim()) return;
-
+  
     try {
       await axios.post(`${API_BASE_URL}comments`, {
         postId,
@@ -56,6 +56,8 @@ export default function CommentsScreen({ route }) {
         content: newComment,
       });
       setNewComment('');
+  
+      // Fetch updated comments after adding a new one
       const response = await axios.get(`${API_BASE_URL}comments/${postId}`);
       setComments(response.data.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)));
     } catch (error) {
@@ -63,40 +65,67 @@ export default function CommentsScreen({ route }) {
     }
   };
 
+  const handleDeleteComment = async (commentId) => {
+    try {
+      await axios.delete(`${API_BASE_URL}comments/${commentId}`);
+      setComments((prevComments) =>
+        prevComments.filter((comment) => comment.commentId !== commentId)
+      );
+    } catch (error) {
+      console.error('Error deleting comment:', error);
+    }
+  };
+
   return (
-    <View style={styles.container}>
-      {post && (
-        <View style={styles.postContainer}>
-          <Text style={styles.postUsername}>{post.user?.username || 'Unknown User'}</Text>
-          <Text style={styles.postContent}>{post.content}</Text>
-          {post.imagePath && (
-            <Image
-              source={{ uri: `${IMAGE_BASE_URL}${post.imagePath}` }}
-              style={styles.postImage}
-            />
-          )}
-          <Text style={styles.postDate}>{new Date(post.createdAt).toLocaleString()}</Text>
+    <KeyboardAvoidingView style={styles.container} behavior="padding">
+      <FlatList
+        ListHeaderComponent={
+          post && (
+            <View style={styles.postContainer}>
+              <Text style={styles.postUsername}>{post.user?.username || 'Unknown User'}</Text>
+              <Text style={styles.postContent}>{post.content}</Text>
+              {post.imagePath && (
+                <Image
+                  source={{ uri: `${IMAGE_BASE_URL}${post.imagePath}` }}
+                  style={styles.postImage}
+                />
+              )}
+              <Text style={styles.postDate}>{new Date(post.createdAt).toLocaleString()}</Text>
 
-          <TextInput
-            style={styles.input}
-            placeholder="Write a comment..."
-            value={newComment}
-            onChangeText={setNewComment}
+              <TextInput
+                style={styles.input}
+                placeholder="Write a comment..."
+                value={newComment}
+                onChangeText={setNewComment}
+              />
+              <Button title="Add Comment" onPress={handleAddComment} />
+            </View>
+          )
+        }
+        data={comments}
+        keyExtractor={(item) => item.commentId.toString()}
+        renderItem={({ item }) => (
+          <CommentComponent
+            commentId={item.commentId}
+            userId={item.userId}
+            username={item.username}
+            content={item.content}
+            createdAt={item.createdAt}
+            replies={item.replies}
+            onReply={handleReply}
+            onDelete={handleDeleteComment}
           />
-          <Button title="Add Comment" onPress={handleAddComment} />
-        </View>
-      )}
-
-      {/* Render CommentListComponent */}
-      <CommentListComponent comments={comments} onReply={handleReply} />
-    </View>
+        )}
+        ListEmptyComponent={<Text>No comments yet.</Text>}
+        contentContainerStyle={styles.commentsContainer}
+      />
+    </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 20,
     backgroundColor: '#fff',
   },
   postContainer: {
@@ -104,6 +133,7 @@ const styles = StyleSheet.create({
     paddingBottom: 10,
     borderBottomWidth: 1,
     borderColor: '#ddd',
+    paddingHorizontal: 20,
   },
   postUsername: {
     fontWeight: 'bold',
@@ -131,5 +161,9 @@ const styles = StyleSheet.create({
     marginTop: 10,
     marginBottom: 10,
     borderRadius: 5,
+  },
+  commentsContainer: {
+    paddingHorizontal: 20,
+    paddingBottom: 20,
   },
 });
