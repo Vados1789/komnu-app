@@ -3,7 +3,7 @@ import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from 'reac
 import { AuthContext } from '../../context/AuthContext';
 
 export default function CommentComponent({ username, content, createdAt, replies, onReply, onDelete, commentId, userId }) {
-  const { user } = useContext(AuthContext); // Access the logged-in user context
+  const { user } = useContext(AuthContext);
   const [isReplying, setIsReplying] = useState(false);
   const [replyContent, setReplyContent] = useState('');
 
@@ -14,7 +14,6 @@ export default function CommentComponent({ username, content, createdAt, replies
   };
 
   const handleDelete = () => {
-    console.log("Attempting to delete comment with ID:", commentId);
     Alert.alert(
       "Delete Comment",
       "Are you sure you want to delete this comment?",
@@ -32,14 +31,11 @@ export default function CommentComponent({ username, content, createdAt, replies
       <Text style={styles.commentDate}>{new Date(createdAt).toLocaleString()}</Text>
 
       <View style={styles.actionsContainer}>
-        {/* Only show Delete button if the logged-in user is the comment author */}
         {user.userId === userId && (
           <TouchableOpacity onPress={handleDelete} style={styles.deleteButton}>
             <Text style={styles.deleteButtonText}>Delete</Text>
           </TouchableOpacity>
         )}
-
-        {/* Smaller Reply button */}
         <TouchableOpacity onPress={() => setIsReplying(!isReplying)} style={styles.replyButton}>
           <Text style={styles.replyButtonText}>Reply</Text>
         </TouchableOpacity>
@@ -59,20 +55,19 @@ export default function CommentComponent({ username, content, createdAt, replies
         </View>
       )}
 
-      {/* Render replies with hierarchical indentation */}
       {replies && replies.length > 0 && (
         <View style={styles.repliesContainer}>
           {replies.map((reply) => (
             <CommentComponent
               key={reply.commentId}
               commentId={reply.commentId}
-              userId={reply.userId} // Pass userId for each reply
+              userId={reply.userId}
               username={reply.username}
               content={reply.content}
               createdAt={reply.createdAt}
               replies={reply.replies}
               onReply={onReply}
-              onDelete={onDelete} // Pass the delete handler for nested comments
+              onDelete={onDelete}
             />
           ))}
         </View>
@@ -96,18 +91,18 @@ const styles = StyleSheet.create({
     marginTop: 5,
   },
   actionsContainer: {
-    flexDirection: 'row',
+    flexDirection: 'row', // Align items in a row
     marginTop: 5,
   },
   deleteButton: {
-    marginRight: 10,
+    marginRight: 15, // Space between Delete and Reply buttons
   },
   deleteButtonText: {
     color: 'red',
     fontSize: 12,
   },
   replyButton: {
-    padding: 5,
+    paddingHorizontal: 5,
   },
   replyButtonText: {
     color: '#0066cc',
