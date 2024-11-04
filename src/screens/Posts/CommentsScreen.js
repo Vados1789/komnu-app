@@ -22,7 +22,8 @@ export default function CommentsScreen({ route }) {
 
         // Fetch comments
         const commentsResponse = await axios.get(`${API_BASE_URL}comments/${postId}`);
-        setComments(commentsResponse.data);
+        // Sort comments by date, newest first
+        setComments(commentsResponse.data.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)));
       } catch (error) {
         console.error('Error fetching post and comments:', error);
       }
@@ -44,7 +45,7 @@ export default function CommentsScreen({ route }) {
       setNewComment('');
       // Refresh comments after adding a new one
       const response = await axios.get(`${API_BASE_URL}comments/${postId}`);
-      setComments(response.data);
+      setComments(response.data.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)));
     } catch (error) {
       console.error('Error adding comment:', error);
     }
@@ -59,11 +60,20 @@ export default function CommentsScreen({ route }) {
           <Text style={styles.postContent}>{post.content}</Text>
           {post.imagePath && (
             <Image
-              source={{ uri: `${IMAGE_BASE_URL}${post.imagePath}` }} // Use IMAGE_BASE_URL here
+              source={{ uri: `${IMAGE_BASE_URL}${post.imagePath}` }}
               style={styles.postImage}
             />
           )}
           <Text style={styles.postDate}>{new Date(post.createdAt).toLocaleString()}</Text>
+
+          {/* Input field for new comments */}
+          <TextInput
+            style={styles.input}
+            placeholder="Write a comment..."
+            value={newComment}
+            onChangeText={setNewComment}
+          />
+          <Button title="Add Comment" onPress={handleAddComment} />
         </View>
       )}
 
@@ -75,19 +85,11 @@ export default function CommentsScreen({ route }) {
           <View style={styles.comment}>
             <Text style={styles.username}>{item.username}</Text>
             <Text>{item.content}</Text>
+            <Text style={styles.commentDate}>{new Date(item.createdAt).toLocaleString()}</Text>
           </View>
         )}
         ListEmptyComponent={<Text>No comments yet.</Text>}
       />
-
-      {/* Input field for new comments */}
-      <TextInput
-        style={styles.input}
-        placeholder="Write a comment..."
-        value={newComment}
-        onChangeText={setNewComment}
-      />
-      <Button title="Add Comment" onPress={handleAddComment} />
     </View>
   );
 }
@@ -130,6 +132,11 @@ const styles = StyleSheet.create({
   },
   username: {
     fontWeight: 'bold',
+  },
+  commentDate: {
+    color: '#888',
+    fontSize: 10,
+    marginTop: 5,
   },
   input: {
     borderWidth: 1,
