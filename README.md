@@ -35,7 +35,7 @@
    
 3. **Set Up Server IP**:
    - Run `ipconfig` in your command prompt or terminal to find your local IP address.
-   - Update the `API_BASE_URL` in `appsettings.json` to match your IP address:
+   - Update the `API_BASE_URL` and file `IMAGE_BASE_URL` in files `apiConfig` and `imageConfig` to match your IP address:
      ```json
      "API_BASE_URL": "http://YOUR_LOCAL_IP:5000"
      ```
@@ -49,7 +49,8 @@
 
    
 
-4. **Backend Setup** (optional):
+4. **Backend Setup**:
+   - In file `launchSettings.json` change url addresses with address of your local machine
    - Follow the backend setup instructions if you plan to run the C# API locally.
 
 ## Project Structure
