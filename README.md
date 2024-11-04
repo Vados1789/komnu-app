@@ -50,7 +50,6 @@
    
 
 4. **Backend Setup**:
-   - In file `launchSettings.json` change url addresses with address of your local machine
    - Follow the backend setup instructions if you plan to run the C# API locally.
 
 ## Project Structure
