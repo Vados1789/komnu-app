@@ -6,13 +6,27 @@ import API_BASE_URL from '../../config/apiConfig';
 import { AuthContext } from '../../context/AuthContext';
 
 export default function CreatePostScreen({ navigation }) {
-    const { user } = useContext(AuthContext); // Access the user context
+  const { user } = useContext(AuthContext);
   const [content, setContent] = useState('');
   const [imageUri, setImageUri] = useState(null);
 
-  // Function to handle image selection
+  // Function to handle image selection from gallery
   const pickImage = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [4, 3],
+      quality: 1,
+    });
+
+    if (!result.canceled) {
+      setImageUri(result.assets[0].uri);
+    }
+  };
+
+  // Function to handle taking a photo with the camera
+  const takePhoto = async () => {
+    const result = await ImagePicker.launchCameraAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
       aspect: [4, 3],
@@ -33,7 +47,7 @@ export default function CreatePostScreen({ navigation }) {
 
     try {
       const data = new FormData();
-      data.append('userId', user.userId); // Replace with actual logged-in user ID
+      data.append('userId', user.userId);
       data.append('content', content);
 
       if (imageUri) {
@@ -70,13 +84,18 @@ export default function CreatePostScreen({ navigation }) {
         multiline
       />
 
-      {/* Image preview and upload button */}
+      {/* Image preview and upload buttons */}
       {imageUri ? (
         <Image source={{ uri: imageUri }} style={styles.imagePreview} />
       ) : (
-        <TouchableOpacity onPress={pickImage} style={styles.imagePicker}>
-          <Text style={styles.imagePickerText}>Select an Image</Text>
-        </TouchableOpacity>
+        <View style={styles.buttonContainer}>
+          <TouchableOpacity onPress={takePhoto} style={styles.imagePicker}>
+            <Text style={styles.imagePickerText}>Take Photo</Text>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={pickImage} style={styles.imagePicker}>
+            <Text style={styles.imagePickerText}>Select an Image</Text>
+          </TouchableOpacity>
+        </View>
       )}
 
       <Button title="Post" onPress={handleCreatePost} color="blue" />
@@ -108,12 +127,18 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     marginBottom: 10,
   },
+  buttonContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
   imagePicker: {
+    flex: 1,
     backgroundColor: '#f0f0f0',
     padding: 10,
     alignItems: 'center',
     justifyContent: 'center',
     borderRadius: 5,
+    marginHorizontal: 5,
     marginBottom: 10,
   },
   imagePickerText: {
