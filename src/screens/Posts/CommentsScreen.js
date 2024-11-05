@@ -114,6 +114,7 @@ export default function CommentsScreen({ route }) {
             replies={item.replies}
             onReply={handleReply}
             onDelete={handleDeleteComment}
+            profileImagePath={item.profileImagePath}
           />
         )}
         ListEmptyComponent={<Text>No comments yet.</Text>}

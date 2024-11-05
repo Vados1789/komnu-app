@@ -1,8 +1,9 @@
 import React, { useState, useContext } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Image, Alert } from 'react-native';
 import { AuthContext } from '../../context/AuthContext';
+import IMAGE_BASE_URL from '../../config/imageConfig';
 
-export default function CommentComponent({ username, content, createdAt, replies, onReply, onDelete, commentId, userId }) {
+export default function CommentComponent({ username, content, createdAt, replies, onReply, onDelete, commentId, userId, profileImagePath }) {
   const { user } = useContext(AuthContext);
   const [isReplying, setIsReplying] = useState(false);
   const [replyContent, setReplyContent] = useState('');
@@ -24,11 +25,24 @@ export default function CommentComponent({ username, content, createdAt, replies
     );
   };
 
+  // Construct the full image URL
+  const completeProfileImagePath = profileImagePath ? `${IMAGE_BASE_URL}${profileImagePath}` : null;
+
   return (
     <View style={styles.commentContainer}>
-      <Text style={styles.username}>{username}</Text>
+      <View style={styles.profileContainer}>
+        {completeProfileImagePath ? (
+          <Image source={{ uri: completeProfileImagePath }} style={styles.profileImage} />
+        ) : (
+          <View style={styles.placeholderImage} />
+        )}
+        <View>
+          <Text style={styles.username}>{username}</Text>
+          <Text style={styles.commentDate}>{new Date(createdAt).toLocaleString()}</Text>
+        </View>
+      </View>
+
       <Text>{content}</Text>
-      <Text style={styles.commentDate}>{new Date(createdAt).toLocaleString()}</Text>
 
       <View style={styles.actionsContainer}>
         {user.userId === userId && (
@@ -68,6 +82,7 @@ export default function CommentComponent({ username, content, createdAt, replies
               replies={reply.replies}
               onReply={onReply}
               onDelete={onDelete}
+              profileImagePath={reply.profileImagePath} // Pass profile image path for each reply
             />
           ))}
         </View>
@@ -82,20 +97,37 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderColor: '#ddd',
   },
+  profileContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 5,
+  },
+  profileImage: {
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    marginRight: 10,
+  },
+  placeholderImage: {
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    backgroundColor: '#ccc',
+    marginRight: 10,
+  },
   username: {
     fontWeight: 'bold',
   },
   commentDate: {
     color: '#888',
     fontSize: 10,
-    marginTop: 5,
   },
   actionsContainer: {
-    flexDirection: 'row', // Align items in a row
+    flexDirection: 'row',
     marginTop: 5,
   },
   deleteButton: {
-    marginRight: 15, // Space between Delete and Reply buttons
+    marginRight: 15,
   },
   deleteButtonText: {
     color: 'red',
@@ -131,6 +163,6 @@ const styles = StyleSheet.create({
   },
   repliesContainer: {
     marginTop: 10,
-    marginLeft: 20, // Indent replies to show hierarchy
+    marginLeft: 20,
   },
 });
