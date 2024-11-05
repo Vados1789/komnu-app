@@ -67,14 +67,36 @@ export default function CommentsScreen({ route }) {
 
   const handleDeleteComment = async (commentId) => {
     try {
-      await axios.delete(`${API_BASE_URL}comments/${commentId}`);
-      setComments((prevComments) =>
-        prevComments.filter((comment) => comment.commentId !== commentId)
-      );
+      const response = await axios.delete(`${API_BASE_URL}comments/${commentId}`);
+      if (response.status === 204) { // Successful deletion
+        // Filter out the deleted comment and update the state immediately
+        setComments((prevComments) => removeCommentById(prevComments, commentId));
+      } else {
+        console.error(`Unexpected status code: ${response.status}`);
+      }
     } catch (error) {
       console.error('Error deleting comment:', error);
+      if (error.response && error.response.status === 404) {
+        Alert.alert("Error", "Comment not found.");
+      } else if (error.response && error.response.status === 403) {
+        Alert.alert("Error", "You do not have permission to delete this comment.");
+      } else {
+        Alert.alert("Error", "An unexpected error occurred.");
+      }
     }
   };
+  
+  // Helper function to remove a comment and its replies by ID
+  const removeCommentById = (comments, commentId) => {
+    return comments.reduce((result, comment) => {
+      if (comment.commentId === commentId) return result; // Skip the deleted comment
+  
+      const filteredReplies = removeCommentById(comment.replies || [], commentId); // Recursively filter replies
+      result.push({ ...comment, replies: filteredReplies });
+      return result;
+    }, []);
+  };
+  
 
   return (
     <KeyboardAvoidingView style={styles.container} behavior="padding">
