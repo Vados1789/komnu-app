@@ -82,7 +82,17 @@ export default function CommentsScreen({ route }) {
         ListHeaderComponent={
           post && (
             <View style={styles.postContainer}>
-              <Text style={styles.postUsername}>{post.user?.username || 'Unknown User'}</Text>
+              <View style={styles.userInfo}>
+                {post.user?.profilePicture ? (
+                  <Image
+                    source={{ uri: `${IMAGE_BASE_URL}${post.user.profilePicture}` }}
+                    style={styles.userImage}
+                  />
+                ) : (
+                  <View style={styles.placeholderImage} />
+                )}
+                <Text style={styles.postUsername}>{post.user?.username || 'Unknown User'}</Text>
+              </View>
               <Text style={styles.postContent}>{post.content}</Text>
               {post.imagePath && (
                 <Image
@@ -136,10 +146,27 @@ const styles = StyleSheet.create({
     borderColor: '#ddd',
     paddingHorizontal: 20,
   },
+  userInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  userImage: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    marginRight: 10,
+  },
+  placeholderImage: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#ccc',
+    marginRight: 10,
+  },
   postUsername: {
     fontWeight: 'bold',
     fontSize: 16,
-    marginBottom: 5,
   },
   postContent: {
     fontSize: 14,
