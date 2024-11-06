@@ -19,6 +19,10 @@ export default function PostsScreen() {
         }
     };
 
+    const onDeletePost = (postId) => {
+        setPosts((prevPosts) => prevPosts.filter((post) => post.postId !== postId));
+    };
+
     useFocusEffect(
         React.useCallback(() => {
         fetchPosts();
@@ -33,7 +37,7 @@ export default function PostsScreen() {
             >
                 <Text style={styles.buttonText}>Create Post</Text>
             </TouchableOpacity>
-            <PostListComponent posts={posts} />
+            <PostListComponent posts={posts} onDeletePost={onDeletePost} />
         </View>
     );
 }

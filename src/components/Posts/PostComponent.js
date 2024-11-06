@@ -1,12 +1,12 @@
 import React, { useContext, useState, useEffect } from 'react';
-import { View, Text, Image, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, Image, StyleSheet, TouchableOpacity, Alert } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import axios from 'axios';
 import API_BASE_URL from '../../config/apiConfig';
 import IMAGE_BASE_URL from '../../config/imageConfig.js';
 import { AuthContext } from '../../context/AuthContext';
 
-export default function PostComponent({ post }) {
+export default function PostComponent({ post, onDelete }) {
   const { user } = useContext(AuthContext);
   const navigation = useNavigation();
   const [commentCount, setCommentCount] = useState(0);
@@ -26,6 +26,29 @@ export default function PostComponent({ post }) {
   const handleEditPress = () => {
     navigation.navigate('EditPostScreen', { post });
   };
+
+  const handleDeletePress = () => {
+    Alert.alert('Delete Post', 'Are you sure you want to delete this post?', [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Delete',
+        style: 'destructive',
+        onPress: async () => {
+          try {
+            const response = await axios.delete(`${API_BASE_URL}posts/${post.postId}`);
+            if (response.status === 204) { // Ensure successful deletion with 204 status
+              Alert.alert('Post deleted successfully');
+              onDelete(post.postId); // Notify parent to remove post from list
+            }
+          } catch (error) {
+            console.error('Error deleting post:', error);
+            Alert.alert('Error', 'Failed to delete the post.');
+          }
+        },
+      },
+    ]);
+  };
+
 
   const handleImagePress = () => {
     navigation.navigate('FullScreenImageScreen', { imageUri: `${IMAGE_BASE_URL}${post.imagePath}` });
@@ -55,9 +78,14 @@ export default function PostComponent({ post }) {
       <Text style={styles.createdAt}>{new Date(post.createdAt).toLocaleString()}</Text>
 
       {user?.userId === post.userId && (
-        <TouchableOpacity style={styles.editButton} onPress={handleEditPress}>
-          <Text style={styles.editButtonText}>Edit</Text>
-        </TouchableOpacity>
+        <View style={styles.actionButtons}>
+          <TouchableOpacity style={styles.editButton} onPress={handleEditPress}>
+            <Text style={styles.editButtonText}>Edit</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.deleteButton} onPress={handleDeletePress}>
+            <Text style={styles.deleteButtonText}>Delete</Text>
+          </TouchableOpacity>
+        </View>
       )}
 
       {/* Comments Button */}
@@ -102,14 +130,27 @@ const styles = StyleSheet.create({
     color: '#888',
     fontSize: 12,
   },
+  actionButtons: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    marginTop: 10,
+  },
   editButton: {
     backgroundColor: '#007BFF',
     padding: 8,
     borderRadius: 5,
-    alignSelf: 'flex-end',
-    marginTop: 10,
+    marginRight: 10,
   },
   editButtonText: {
+    color: '#fff',
+    fontWeight: 'bold',
+  },
+  deleteButton: {
+    backgroundColor: '#FF6347',
+    padding: 8,
+    borderRadius: 5,
+  },
+  deleteButtonText: {
     color: '#fff',
     fontWeight: 'bold',
   },
