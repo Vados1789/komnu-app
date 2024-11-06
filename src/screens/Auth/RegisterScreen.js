@@ -26,17 +26,35 @@ export default function RegisterScreen() {
     };
 
     const pickImage = async () => {
-        const result = await ImagePicker.launchImageLibraryAsync({
+        const options = {
             mediaTypes: ImagePicker.MediaTypeOptions.Images,
             allowsEditing: true,
-            aspect: [1, 1], // Make the selected image square
+            aspect: [1, 1],
             quality: 1,
-        });
-
-        if (!result.canceled) {
-            setProfilePicture(result.assets[0].uri);
-        }
+        };
+    
+        // Ask user if they want to use the camera or library
+        Alert.alert(
+            "Select Profile Picture",
+            "Choose an option",
+            [
+                { text: "Take Photo", onPress: async () => {
+                    const result = await ImagePicker.launchCameraAsync(options);
+                    if (!result.canceled) {
+                        setProfilePicture(result.assets[0].uri); // Set image URI to display in preview
+                    }
+                }},
+                { text: "Choose from Library", onPress: async () => {
+                    const result = await ImagePicker.launchImageLibraryAsync(options);
+                    if (!result.canceled) {
+                        setProfilePicture(result.assets[0].uri); // Set image URI to display in preview
+                    }
+                }},
+                { text: "Cancel", style: "cancel" }
+            ]
+        );
     };
+    
 
     const handleRegister = async () => {
         console.log("Data being sent to server:", formData);
@@ -79,7 +97,6 @@ export default function RegisterScreen() {
             console.log("Server response:", response.data);
             Alert.alert('Success', 'User created successfully!');
             
-            // Navigate to LoginSettingsScreen and pass the user_id
             const userId = response.data.userId;
             navigation.navigate('LoginSettings', { userId });
 
