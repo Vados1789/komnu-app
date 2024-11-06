@@ -5,11 +5,15 @@ import axios from 'axios';
 import API_BASE_URL from '../../config/apiConfig';
 import IMAGE_BASE_URL from '../../config/imageConfig.js';
 import { AuthContext } from '../../context/AuthContext';
+import { FontAwesome } from '@expo/vector-icons'; // Using FontAwesome for icons
 
 export default function PostComponent({ post, onDelete }) {
   const { user } = useContext(AuthContext);
   const navigation = useNavigation();
   const [commentCount, setCommentCount] = useState(0);
+  const [likeCount, setLikeCount] = useState(post.likeCount || 0);
+  const [dislikeCount, setDislikeCount] = useState(post.dislikeCount || 0);
+  const [userReaction, setUserReaction] = useState(null); // 'like', 'dislike', or null
 
   useEffect(() => {
     const fetchCommentCount = async () => {
@@ -21,7 +25,55 @@ export default function PostComponent({ post, onDelete }) {
       }
     };
     fetchCommentCount();
-  }, [post.postId]);
+
+    // Fetch the user's reaction to the post if available
+    const fetchUserReaction = async () => {
+      try {
+        const response = await axios.get(`${API_BASE_URL}post-reactions/${post.postId}/user/${user.userId}`);
+        setUserReaction(response.data.reactionType);
+      } catch (error) {
+        if (error.response && error.response.status === 404) {
+          // If a 404 error occurs, it means there's no reaction yet
+          setUserReaction(null);
+        } else {
+          console.error('Error fetching user reaction:', error);
+        }
+      }
+    };
+    fetchUserReaction();
+  }, [post.postId, user.userId]);
+
+  const handleLikePress = async () => {
+    try {
+      const newReaction = userReaction === 'like' ? null : 'like'; // Toggle like
+      const response = await axios.post(`${API_BASE_URL}post-reactions`, {
+        postId: post.postId,
+        userId: user.userId,
+        reactionType: newReaction,
+      });
+      setUserReaction(newReaction);
+      setLikeCount(response.data.likeCount);
+      setDislikeCount(response.data.dislikeCount);
+    } catch (error) {
+      console.error('Error liking post:', error);
+    }
+  };
+
+  const handleDislikePress = async () => {
+    try {
+      const newReaction = userReaction === 'dislike' ? null : 'dislike'; // Toggle dislike
+      const response = await axios.post(`${API_BASE_URL}post-reactions`, {
+        postId: post.postId,
+        userId: user.userId,
+        reactionType: newReaction,
+      });
+      setUserReaction(newReaction);
+      setLikeCount(response.data.likeCount);
+      setDislikeCount(response.data.dislikeCount);
+    } catch (error) {
+      console.error('Error disliking post:', error);
+    }
+  };
 
   const handleEditPress = () => {
     navigation.navigate('EditPostScreen', { post });
@@ -36,9 +88,9 @@ export default function PostComponent({ post, onDelete }) {
         onPress: async () => {
           try {
             const response = await axios.delete(`${API_BASE_URL}posts/${post.postId}`);
-            if (response.status === 204) { // Ensure successful deletion with 204 status
+            if (response.status === 204) {
               Alert.alert('Post deleted successfully');
-              onDelete(post.postId); // Notify parent to remove post from list
+              onDelete(post.postId);
             }
           } catch (error) {
             console.error('Error deleting post:', error);
@@ -47,15 +99,6 @@ export default function PostComponent({ post, onDelete }) {
         },
       },
     ]);
-  };
-
-
-  const handleImagePress = () => {
-    navigation.navigate('FullScreenImageScreen', { imageUri: `${IMAGE_BASE_URL}${post.imagePath}` });
-  };
-
-  const handleCommentsPress = () => {
-    navigation.navigate('CommentsScreen', { postId: post.postId });
   };
 
   return (
@@ -71,25 +114,41 @@ export default function PostComponent({ post, onDelete }) {
       </View>
       <Text style={styles.content}>{post.content || 'No content available'}</Text>
       {post.imagePath ? (
-        <TouchableOpacity onPress={handleImagePress}>
+        <TouchableOpacity onPress={() => navigation.navigate('FullScreenImageScreen', { imageUri: `${IMAGE_BASE_URL}${post.imagePath}` })}>
           <Image source={{ uri: `${IMAGE_BASE_URL}${post.imagePath}` }} style={styles.postImage} />
         </TouchableOpacity>
       ) : null}
       <Text style={styles.createdAt}>{new Date(post.createdAt).toLocaleString()}</Text>
 
-      {user?.userId === post.userId && (
-        <View style={styles.actionButtons}>
-          <TouchableOpacity style={styles.editButton} onPress={handleEditPress}>
-            <Text style={styles.editButtonText}>Edit</Text>
+       {/* Action Buttons */}
+      <View style={styles.actionButtons}>
+        {/* Reactions on the left */}
+        <View style={styles.reactionSection}>
+          <TouchableOpacity onPress={handleLikePress} style={styles.reactionButton}>
+            <FontAwesome name={userReaction === 'like' ? 'thumbs-up' : 'thumbs-o-up'} size={20} color="blue" />
+            <Text style={styles.reactionCount}>{likeCount}</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.deleteButton} onPress={handleDeletePress}>
-            <Text style={styles.deleteButtonText}>Delete</Text>
+          <TouchableOpacity onPress={handleDislikePress} style={styles.reactionButton}>
+            <FontAwesome name={userReaction === 'dislike' ? 'thumbs-down' : 'thumbs-o-down'} size={20} color="red" />
+            <Text style={styles.reactionCount}>{dislikeCount}</Text>
           </TouchableOpacity>
         </View>
-      )}
+
+        {/* Edit and Delete on the right */}
+        {user?.userId === post.userId && (
+          <>
+            <TouchableOpacity style={styles.editButton} onPress={handleEditPress}>
+              <Text style={styles.editButtonText}>Edit</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.deleteButton} onPress={handleDeletePress}>
+              <Text style={styles.deleteButtonText}>Delete</Text>
+            </TouchableOpacity>
+          </>
+        )}
+      </View>
 
       {/* Comments Button */}
-      <TouchableOpacity style={styles.commentButton} onPress={handleCommentsPress}>
+      <TouchableOpacity style={styles.commentButton} onPress={() => navigation.navigate('CommentsScreen', { postId: post.postId })}>
         <Text style={styles.commentButtonText}>Comments ({commentCount})</Text>
       </TouchableOpacity>
     </View>
@@ -132,14 +191,32 @@ const styles = StyleSheet.create({
   },
   actionButtons: {
     flexDirection: 'row',
-    justifyContent: 'flex-end',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     marginTop: 10,
+  },
+  reactionSection: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  reactionButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginRight: 15,
+  },
+  reactionCount: {
+    marginLeft: 5,
+    fontSize: 16,
+  },
+  editDeleteSection: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   editButton: {
     backgroundColor: '#007BFF',
     padding: 8,
     borderRadius: 5,
-    marginRight: 10,
+    marginLeft: 10,
   },
   editButtonText: {
     color: '#fff',
@@ -149,6 +226,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#FF6347',
     padding: 8,
     borderRadius: 5,
+    marginLeft: 10,
   },
   deleteButtonText: {
     color: '#fff',
