@@ -27,20 +27,22 @@ export default function PostComponent({ post, onDelete }) {
     fetchCommentCount();
 
     // Fetch the user's reaction to the post if available
-    const fetchUserReaction = async () => {
+    // Fetch like/dislike counts and user reaction
+    const fetchReactionData = async () => {
       try {
-        const response = await axios.get(`${API_BASE_URL}post-reactions/${post.postId}/user/${user.userId}`);
-        setUserReaction(response.data.reactionType);
+        // Fetch like and dislike counts
+        const countsResponse = await axios.get(`${API_BASE_URL}post-reactions/${post.postId}`);
+        setLikeCount(countsResponse.data.likeCount);
+        setDislikeCount(countsResponse.data.dislikeCount);
+
+        // Fetch user reaction
+        const userReactionResponse = await axios.get(`${API_BASE_URL}post-reactions/${post.postId}/user/${user.userId}`);
+        setUserReaction(userReactionResponse.data.reactionType);
       } catch (error) {
-        if (error.response && error.response.status === 404) {
-          // If a 404 error occurs, it means there's no reaction yet
-          setUserReaction(null);
-        } else {
-          console.error('Error fetching user reaction:', error);
-        }
+        console.error('Error fetching reactions:', error);
       }
     };
-    fetchUserReaction();
+    fetchReactionData();
   }, [post.postId, user.userId]);
 
   const handleLikePress = async () => {
