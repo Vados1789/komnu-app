@@ -26,16 +26,12 @@ export default function PostComponent({ post, onDelete }) {
     };
     fetchCommentCount();
 
-    // Fetch the user's reaction to the post if available
-    // Fetch like/dislike counts and user reaction
     const fetchReactionData = async () => {
       try {
-        // Fetch like and dislike counts
         const countsResponse = await axios.get(`${API_BASE_URL}post-reactions/${post.postId}`);
         setLikeCount(countsResponse.data.likeCount);
         setDislikeCount(countsResponse.data.dislikeCount);
 
-        // Fetch user reaction
         const userReactionResponse = await axios.get(`${API_BASE_URL}post-reactions/${post.postId}/user/${user.userId}`);
         setUserReaction(userReactionResponse.data.reactionType);
       } catch (error) {
@@ -122,10 +118,10 @@ export default function PostComponent({ post, onDelete }) {
       ) : null}
       <Text style={styles.createdAt}>{new Date(post.createdAt).toLocaleString()}</Text>
 
-       {/* Action Buttons */}
+      {/* Action Buttons */}
       <View style={styles.actionButtons}>
         {/* Reactions on the left */}
-        <View style={styles.reactionSection}>
+        <View style={styles.leftButtons}>
           <TouchableOpacity onPress={handleLikePress} style={styles.reactionButton}>
             <FontAwesome name={userReaction === 'like' ? 'thumbs-up' : 'thumbs-o-up'} size={20} color="blue" />
             <Text style={styles.reactionCount}>{likeCount}</Text>
@@ -138,14 +134,14 @@ export default function PostComponent({ post, onDelete }) {
 
         {/* Edit and Delete on the right */}
         {user?.userId === post.userId && (
-          <>
+          <View style={styles.rightButtons}>
             <TouchableOpacity style={styles.editButton} onPress={handleEditPress}>
               <Text style={styles.editButtonText}>Edit</Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.deleteButton} onPress={handleDeletePress}>
               <Text style={styles.deleteButtonText}>Delete</Text>
             </TouchableOpacity>
-          </>
+          </View>
         )}
       </View>
 
@@ -197,7 +193,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginTop: 10,
   },
-  reactionSection: {
+  leftButtons: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  rightButtons: {
     flexDirection: 'row',
     alignItems: 'center',
   },
@@ -209,10 +209,6 @@ const styles = StyleSheet.create({
   reactionCount: {
     marginLeft: 5,
     fontSize: 16,
-  },
-  editDeleteSection: {
-    flexDirection: 'row',
-    alignItems: 'center',
   },
   editButton: {
     backgroundColor: '#007BFF',
