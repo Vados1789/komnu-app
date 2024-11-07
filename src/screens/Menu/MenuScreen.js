@@ -17,8 +17,10 @@ export default function MenuScreen() {
         {
           text: 'OK',
           onPress: () => {
-            logout(); // Call logout function from AuthContext
-            navigation.navigate('Login'); // Redirect to Login screen
+            navigation.reset({
+              index: 0,
+              routes: [{ name: 'Login' }], // Reset navigation stack to make Login the only screen
+            });
           },
         },
       ],
