@@ -4,11 +4,13 @@ import axios from 'axios';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import PostListComponent from '../../components/Posts/PostListComponent';
 import API_BASE_URL from '../../config/apiConfig';
+import usePostSignalR from '../../hooks/usePostSignalR';
 
 export default function PostsScreen() {
     const navigation = useNavigation();
     const [posts, setPosts] = useState([]);
 
+    // Fetch posts initially
     const fetchPosts = async () => {
         try {
             const response = await axios.get(`${API_BASE_URL}posts`);
@@ -19,13 +21,23 @@ export default function PostsScreen() {
         }
     };
 
+    // Handle receiving a new post from SignalR
+    const handleNewPost = (newPost) => {
+        console.log("Received new post via SignalR:", newPost);
+        setPosts((prevPosts) => [newPost, ...prevPosts]);
+    };
+
     const onDeletePost = (postId) => {
         setPosts((prevPosts) => prevPosts.filter((post) => post.postId !== postId));
     };
 
+    // Use SignalR hook to listen for new posts
+    usePostSignalR(null, handleNewPost);
+
+    // Fetch posts when screen is focused
     useFocusEffect(
         React.useCallback(() => {
-        fetchPosts();
+            fetchPosts();
         }, [])
     );
 

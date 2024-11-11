@@ -5,6 +5,9 @@ import getPostSignalRConnection from '../services/signalR/postSignalR';
 const usePostSignalR = (onReactionUpdate, onNewPost) => {
     useEffect(() => {
         const connection = getPostSignalRConnection();
+        
+        // Check if onNewPost is defined
+        console.log("Setting up SignalR connection. onNewPost defined:", typeof onNewPost === "function");
 
         // Set up listeners
         if (onReactionUpdate) {
