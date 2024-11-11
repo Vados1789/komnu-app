@@ -1,28 +1,28 @@
 // Importing necessary dependencies
 import React, { useContext, useState, useEffect } from 'react';
 import { View, Text, StyleSheet, Image, ActivityIndicator, ScrollView, TouchableOpacity, Alert } from 'react-native';
-import { AuthContext } from '../../context/AuthContext'; // Importing AuthContext to access user data
-import updateUserProfilePicture from '../../components/Profile/UpdateUserProfilePicture'; // Profile picture update function
+import { AuthContext } from '../../context/AuthContext';
+import updateUserProfilePicture from '../../components/Profile/UpdateUserProfilePicture';
 import * as ImagePicker from 'expo-image-picker';
-import AsyncStorage from '@react-native-async-storage/async-storage'; // For storing updated user data
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import axios from 'axios';
 import Icon from 'react-native-vector-icons/MaterialIcons';
+import API_BASE_URL from '../../config/apiConfig';
 import IMAGE_BASE_URL from '../../config/imageConfig';
 
-const DEFAULT_IMAGE_URL = 'https://via.placeholder.com/100'; // Default profile picture URL
+const DEFAULT_IMAGE_URL = 'https://via.placeholder.com/100';
 
 export default function ProfileScreen({ navigation }) {
-  // Accessing user and loading state from AuthContext
   const { user, isLoading } = useContext(AuthContext);
 
-  // State variables
-  const [newProfilePicture, setNewProfilePicture] = useState(null); // Holds selected profile picture URI
-  const [uploading, setUploading] = useState(false); // Controls loading state during picture upload
-  const [imageKey, setImageKey] = useState(0); // Used to force image re-render after updates
-  const [localUser, setLocalUser] = useState(user); // Local state for user data
-  const [bioBackgroundColor, setBioBackgroundColor] = useState('#f0f8ff'); // Background color for bio section
-  const [headerBackgroundColor, setHeaderBackgroundColor] = useState('#f5f5f5'); // Background color for header
+  const [newProfilePicture, setNewProfilePicture] = useState(null);
+  const [uploading, setUploading] = useState(false);
+  const [imageKey, setImageKey] = useState(0);
+  const [localUser, setLocalUser] = useState(user);
+  const [friendCount, setFriendCount] = useState(0);
+  const [bioBackgroundColor, setBioBackgroundColor] = useState('#f0f8ff');
+  const [headerBackgroundColor, setHeaderBackgroundColor] = useState('#f5f5f5');
 
-  // Requesting camera permissions on component mount
   useEffect(() => {
     const requestPermission = async () => {
       const { status } = await ImagePicker.requestCameraPermissionsAsync();
@@ -31,9 +31,30 @@ export default function ProfileScreen({ navigation }) {
       }
     };
     requestPermission();
+
+    fetchFriendCount();
+    loadUser();
   }, []);
 
-  // Function to pick an image from the camera or library
+  const loadUser = async () => {
+    const storedUser = await AsyncStorage.getItem('user');
+    if (storedUser) {
+      setLocalUser(JSON.parse(storedUser));
+    }
+  };
+
+  const fetchFriendCount = async () => {
+    if (user && user.userId) {
+      try {
+        const response = await axios.get(`${API_BASE_URL}Friends/list/${user.userId}`);
+        setFriendCount(response.data.length);
+      } catch (error) {
+        console.error("Error fetching friend count:", error);
+        Alert.alert("Error", "Error fetching friend count.");
+      }
+    }
+  };
+
   const pickImage = async (source) => {
     let result;
     if (source === 'camera') {
@@ -56,26 +77,22 @@ export default function ProfileScreen({ navigation }) {
     }
   };
 
-  // Function to handle saving the selected profile picture
   const handleSaveProfilePicture = async () => {
     if (!newProfilePicture) {
       Alert.alert('No Picture Selected', 'Please select a new profile picture.');
       return;
     }
 
-    setUploading(true); // Set loading state
+    setUploading(true);
 
     try {
-      // Updating profile picture via backend function
       const updatedUserData = await updateUserProfilePicture(user.userId, newProfilePicture);
 
       if (updatedUserData) {
-        await AsyncStorage.setItem('user', JSON.stringify(updatedUserData)); // Store updated user data locally
-
-        setLocalUser(updatedUserData); // Update local user state
-        setImageKey(prevKey => prevKey + 1); // Force image re-render
-        setNewProfilePicture(null); // Reset new profile picture
-
+        await AsyncStorage.setItem('user', JSON.stringify(updatedUserData));
+        setLocalUser(updatedUserData);
+        setImageKey(prevKey => prevKey + 1);
+        setNewProfilePicture(null);
         Alert.alert('Profile Updated', 'Your profile picture has been updated.');
       } else {
         Alert.alert('Error', 'Failed to update profile picture.');
@@ -84,21 +101,18 @@ export default function ProfileScreen({ navigation }) {
       console.error('Error occurred while saving profile picture:', error);
       Alert.alert('Error', 'An error occurred while updating your profile picture.');
     } finally {
-      setUploading(false); // Reset loading state
+      setUploading(false);
     }
   };
 
-  // Toggle background color for bio section
   const toggleBioBackground = () => {
     setBioBackgroundColor(prevColor => (prevColor === '#f0f8ff' ? '#e6ffe6' : '#f0f8ff'));
   };
 
-  // Toggle background color for header section
   const toggleHeaderBackground = () => {
     setHeaderBackgroundColor(prevColor => (prevColor === '#f5f5f5' ? '#ffe6e6' : '#f5f5f5'));
   };
 
-  // Show loading indicator if data is still loading
   if (isLoading) {
     return (
       <View style={styles.loadingContainer}>
@@ -107,20 +121,18 @@ export default function ProfileScreen({ navigation }) {
     );
   }
 
-  // Main render of profile screen
   return (
     <ScrollView contentContainerStyle={styles.container}>
-      {/* Header section with profile picture and edit options */}
       <TouchableOpacity onPress={toggleHeaderBackground}>
         <View style={[styles.headerContainer, { backgroundColor: headerBackgroundColor }]}>
           <Image
-            key={imageKey} // Rerenders when image key changes
+            key={imageKey}
             source={{
               uri: newProfilePicture || `${IMAGE_BASE_URL}${localUser.profilePicture}?${new Date().getTime()}` || DEFAULT_IMAGE_URL,
             }}
             style={styles.profilePicture}
           />
-          
+
           <TouchableOpacity style={styles.changePictureButton} onPress={() => pickImage('library')}>
             <Text style={styles.changePictureButtonText}>Choose from Library</Text>
           </TouchableOpacity>
@@ -130,27 +142,24 @@ export default function ProfileScreen({ navigation }) {
           </TouchableOpacity>
 
           {uploading ? (
-            <ActivityIndicator size="small" color="#0000ff" /> // Show loading during upload
+            <ActivityIndicator size="small" color="#0000ff" />
           ) : (
             <TouchableOpacity style={styles.saveButton} onPress={handleSaveProfilePicture}>
               <Text style={styles.saveButtonText}>Save Profile</Text>
             </TouchableOpacity>
           )}
 
-          {/* Display user information */}
           <Text style={styles.username}>{localUser.username}</Text>
-          <Text style={styles.friendCount}>{localUser.friendsCount || 0} friends</Text>
+          <Text style={styles.friendCount}>{friendCount} friends</Text>
         </View>
       </TouchableOpacity>
 
-      {/* Bio section with toggleable background */}
       <TouchableOpacity onPress={toggleBioBackground}>
         <View style={[styles.bioContainer, { backgroundColor: bioBackgroundColor }]}>
           <Text style={styles.bio}>{localUser.bio || 'No bio available'}</Text>
         </View>
       </TouchableOpacity>
 
-      {/* Additional user information section */}
       <View style={styles.infoContainer}>
         <Text style={styles.infoTitle}>Details</Text>
         <View style={styles.infoTextContainer}>
@@ -172,7 +181,6 @@ export default function ProfileScreen({ navigation }) {
   );
 }
 
-// Styles for ProfileScreen components
 const styles = StyleSheet.create({
   loadingContainer: { 
     flex: 1, 
