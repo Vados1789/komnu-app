@@ -5,16 +5,31 @@ import axios from 'axios';
 import API_BASE_URL from '../../config/apiConfig';
 import IMAGE_BASE_URL from '../../config/imageConfig.js';
 import { AuthContext } from '../../context/AuthContext';
-import { FontAwesome } from '@expo/vector-icons'; // Using FontAwesome for icons
-import createSignalRConnection from '../../services/signalR.js';
+import { FontAwesome } from '@expo/vector-icons';
+import usePostSignalR from '../../hooks/usePostSignalR';
 
-export default function PostComponent({ post, onDelete }) {
+export default function PostComponent({ post, onDelete, onNewPost }) {
   const { user } = useContext(AuthContext);
   const navigation = useNavigation();
   const [commentCount, setCommentCount] = useState(0);
   const [likeCount, setLikeCount] = useState(post.likeCount || 0);
   const [dislikeCount, setDislikeCount] = useState(post.dislikeCount || 0);
-  const [userReaction, setUserReaction] = useState(null); // 'like', 'dislike', or null
+  const [userReaction, setUserReaction] = useState(null);
+
+  // Handle real-time reaction updates
+  const handleReactionUpdate = (update) => {
+    if (update.postId === post.postId) {
+      setLikeCount(update.likeCount);
+      setDislikeCount(update.dislikeCount);
+    }
+  };
+
+  // Handle new post notifications
+  const handleNewPost = (newPost) => {
+    onNewPost(newPost);
+  };
+
+  usePostSignalR(handleReactionUpdate, handleNewPost);
 
   useEffect(() => {
     const fetchCommentCount = async () => {
@@ -40,31 +55,6 @@ export default function PostComponent({ post, onDelete }) {
       }
     };
     fetchReactionData();
-
-    // Initialize SignalR connection and set up listeners
-    const connection = createSignalRConnection();
-    connection.on("ReceiveReactionUpdate", (update) => {
-      if (update.postId === post.postId) {
-        console.log("Received reaction update:", update); // Debugging log
-        setLikeCount(update.likeCount);
-        setDislikeCount(update.dislikeCount);
-      }
-    });
-    
-    connection.on("ReceiveCommentUpdate", (update) => {
-      if (update.postId === post.postId) {
-        console.log("Received comment update:", update); // Debugging log
-        setCommentCount(update.commentCount);
-      }
-    });
-
-    connection.start()
-      .then(() => console.log("SignalR connected successfully"))
-      .catch(err => console.error("SignalR Connection Error: ", err));
-
-    return () => {
-      connection.stop(); // Clean up the connection when the component unmounts
-    };
   }, [post.postId, user.userId]);
 
   const handleLikePress = async () => {
