@@ -1,7 +1,8 @@
 // src/services/signalR.js
 import { HubConnectionBuilder, LogLevel } from '@microsoft/signalr';
+import IMAGE_BASE_URL from '../config/imageConfig';
 
-const SIGNALR_URL = "http://10.71.106.237:5202/postHub";
+const SIGNALR_URL = `${IMAGE_BASE_URL}/postHub`;
 
 const createSignalRConnection = () => {
     const connection = new HubConnectionBuilder()
