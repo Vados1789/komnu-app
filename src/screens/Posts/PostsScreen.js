@@ -10,7 +10,6 @@ export default function PostsScreen() {
     const navigation = useNavigation();
     const [posts, setPosts] = useState([]);
 
-    // Fetch posts initially
     const fetchPosts = async () => {
         try {
             const response = await axios.get(`${API_BASE_URL}posts`);
@@ -21,20 +20,36 @@ export default function PostsScreen() {
         }
     };
 
-    // Handle receiving a new post from SignalR
     const handleNewPost = (newPost) => {
         console.log("Received new post via SignalR:", newPost);
         setPosts((prevPosts) => [newPost, ...prevPosts]);
+    };
+
+    const handlePostDeleted = (postId) => {
+        console.log("Post deleted via SignalR:", postId);
+        // Filter out the deleted post and force re-render by creating a new array
+        setPosts((prevPosts) => {
+            const updatedPosts = prevPosts.filter((post) => post.postId !== postId);
+            console.log("Updated posts after deletion:", updatedPosts);
+            return updatedPosts;  // Make sure to return the updated array
+        });
+    };
+
+    const handlePostUpdated = (updatedPost) => {
+        console.log("Post updated via SignalR:", updatedPost);
+        setPosts((prevPosts) =>
+            prevPosts.map((post) =>
+                post.postId === updatedPost.postId ? { ...post, ...updatedPost } : post
+            )
+        );
     };
 
     const onDeletePost = (postId) => {
         setPosts((prevPosts) => prevPosts.filter((post) => post.postId !== postId));
     };
 
-    // Use SignalR hook to listen for new posts
-    usePostSignalR(null, handleNewPost);
+    usePostSignalR(null, handleNewPost, handlePostDeleted, handlePostUpdated);
 
-    // Fetch posts when screen is focused
     useFocusEffect(
         React.useCallback(() => {
             fetchPosts();

@@ -34,29 +34,36 @@ export default function EditPostScreen({ route, navigation }) {
             Alert.alert('Error', 'Post content cannot be empty.');
             return;
         }
-
+    
         try {
             const data = new FormData();
             data.append('userId', user.userId);
             data.append('content', content);
-
-            // Include the new image if selected
-            if (hasNewImage && imageUri) {
+    
+            // Always include the current image, even if it's not updated
+            if (imageUri) {
                 const filename = imageUri.split('/').pop();
                 const fileType = filename.split('.').pop();
                 data.append('image', {
-                uri: imageUri,
-                name: filename,
-                type: `image/${fileType}`,
+                    uri: imageUri,
+                    name: filename,
+                    type: `image/${fileType}`,
                 });
             }
-
-            await axios.put(`${API_BASE_URL}posts/${post.postId}`, data, {
+    
+            // Log FormData content before sending
+            console.log('FormData content:', data);
+    
+            const response = await axios.put(`${API_BASE_URL}posts/${post.postId}`, data, {
                 headers: { 'Content-Type': 'multipart/form-data' },
             });
-
-            Alert.alert('Success', 'Post updated successfully!');
-            navigation.goBack();
+    
+            if (response.status === 204) {
+                Alert.alert('Success', 'Post updated successfully!');
+                navigation.goBack();
+            } else {
+                Alert.alert('Error', 'Could not update post.');
+            }
         } catch (error) {
             console.error('Error updating post:', error);
             Alert.alert('Error', 'Could not update post.');
