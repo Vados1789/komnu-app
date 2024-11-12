@@ -57,7 +57,7 @@ export default function CommentComponent({
             <Text style={styles.content}>{content}</Text>
 
             <View style={styles.actionsContainer}>
-                {user?.userId === userId && (
+                {user?.userId === userId && replies.length === 0 && (  // Show delete button only if there are no replies
                     <TouchableOpacity onPress={handleDelete} style={styles.deleteButton}>
                         <Text style={styles.deleteButtonText}>Delete</Text>
                     </TouchableOpacity>
