@@ -2,29 +2,11 @@ import { Alert } from 'react-native';
 import axios from 'axios';
 import API_BASE_URL from '../../config/apiConfig';
 
-const getMimeType = (uri) => {
-  const extension = uri.split('.').pop().toLowerCase();
-  switch (extension) {
-    case 'jpg':
-    case 'jpeg':
-      return 'image/jpeg';
-    case 'png':
-      return 'image/png';
-    case 'gif':
-      return 'image/gif';
-    default:
-      return 'application/octet-stream';
-  }
-};
+const mimeTypes = { jpg: 'image/jpeg', jpeg: 'image/jpeg', png: 'image/png', gif: 'image/gif' };
 
 const updateUserProfilePicture = async (userId, newProfilePictureUri) => {
-  if (!userId) {
-    Alert.alert('Invalid User', 'User ID is required to update the profile picture.');
-    return null;
-  }
-  
-  if (!newProfilePictureUri) {
-    Alert.alert('No Picture Selected', 'Please select a new profile picture to save.');
+  if (!userId || !newProfilePictureUri) {
+    Alert.alert('Error', !userId ? 'User ID is required.' : 'Please select a new profile picture.');
     return null;
   }
 
@@ -32,40 +14,32 @@ const updateUserProfilePicture = async (userId, newProfilePictureUri) => {
   formData.append('profilePicture', {
     uri: newProfilePictureUri,
     name: newProfilePictureUri.split('/').pop(),
-    type: getMimeType(newProfilePictureUri),
+    type: mimeTypes[newProfilePictureUri.split('.').pop().toLowerCase()] || 'application/octet-stream',
   });
 
   try {
-    const response = await axios.put(
+    const { data, status } = await axios.put(
       `${API_BASE_URL}profile/${userId}/upload-picture`,
       formData,
-      {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      }
+      { headers: { 'Content-Type': 'multipart/form-data' } }
     );
 
-    if (response.status === 200 && response.data) {
-      const profilePictureUrl = response.data.ProfilePictureUrl || response.data.user?.profilePicture || response.data.profilePicture;
-      if (profilePictureUrl) {
-        return {
-          ...response.data.user,
-          profilePicture: profilePictureUrl,
-        };
-      } else {
-        Alert.alert('Upload Successful', 'But profile picture URL is missing. Try reloading.');
-        return null;
-      }
+    if (status === 200 && data) {
+      const profilePictureUrl = data.ProfilePictureUrl || data.user?.profilePicture || data.profilePicture;
+      if (profilePictureUrl) return { ...data.user, profilePicture: profilePictureUrl };
+      Alert.alert('Upload Successful', 'But profile picture URL is missing. Try reloading.');
     } else {
-      Alert.alert('Upload Failed', 'Unexpected response status or data format.');
-      return null;
+      Alert.alert('Upload Failed', 'Unexpected response format.');
     }
   } catch (error) {
-    console.error('Error:', error.message);
-    Alert.alert('Error', 'An unexpected error occurred. Please try again.');
-    return null;
+    const status = error.response?.status;
+    const errorMsg = status === 404 ? 'Endpoint not found.' :
+                     status === 500 ? 'Server error. Try again later.' :
+                     error.request ? 'No response from server. Check connection.' :
+                     'An unexpected error occurred.';
+    Alert.alert('Error', errorMsg);
   }
+  return null;
 };
 
 export default updateUserProfilePicture;
