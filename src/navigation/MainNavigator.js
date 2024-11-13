@@ -11,6 +11,7 @@ import CreatePostScreen from '../screens/Posts/CreatePostScreen';
 import EditPostScreen from '../screens/Posts/EditPostScreen';
 import FullScreenImageScreen from '../screens/Posts/FullScreenImageScreen';
 import CommentsScreen from '../screens/Posts/CommentsScreen';
+import CreateGroupScreen from '../screens/Groups/CreateGroupScreen';
 
 const Stack = createStackNavigator();
 
@@ -28,6 +29,7 @@ export default function MainNavigator() {
         <Stack.Screen name="EditPostScreen" component={EditPostScreen} options={{ title: 'Edit Post' }} />
         <Stack.Screen name="FullScreenImageScreen" component={FullScreenImageScreen} options={{ headerShown: false }} />
         <Stack.Screen name="CommentsScreen" component={CommentsScreen} options={{ title: 'Comments' }} />
+        <Stack.Screen name="CreateGroupScreen" component={CreateGroupScreen} options={{ title: 'Create Group' }} />
       </Stack.Navigator>
     </NavigationContainer>
   );

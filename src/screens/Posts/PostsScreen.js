@@ -4,6 +4,7 @@ import axios from 'axios';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import PostListComponent from '../../components/Posts/PostListComponent';
 import API_BASE_URL from '../../config/apiConfig';
+import usePostSignalR from '../../hooks/usePostSignalR';
 
 export default function PostsScreen() {
     const navigation = useNavigation();
@@ -19,13 +20,39 @@ export default function PostsScreen() {
         }
     };
 
+    const handleNewPost = (newPost) => {
+        console.log("Received new post via SignalR:", newPost);
+        setPosts((prevPosts) => [newPost, ...prevPosts]);
+    };
+
+    const handlePostDeleted = (postId) => {
+        console.log("Post deleted via SignalR:", postId);
+        // Filter out the deleted post and force re-render by creating a new array
+        setPosts((prevPosts) => {
+            const updatedPosts = prevPosts.filter((post) => post.postId !== postId);
+            console.log("Updated posts after deletion:", updatedPosts);
+            return updatedPosts;  // Make sure to return the updated array
+        });
+    };
+
+    const handlePostUpdated = (updatedPost) => {
+        console.log("Post updated via SignalR:", updatedPost);
+        setPosts((prevPosts) =>
+            prevPosts.map((post) =>
+                post.postId === updatedPost.postId ? { ...post, ...updatedPost } : post
+            )
+        );
+    };
+
     const onDeletePost = (postId) => {
         setPosts((prevPosts) => prevPosts.filter((post) => post.postId !== postId));
     };
 
+    usePostSignalR(null, handleNewPost, handlePostDeleted, handlePostUpdated);
+
     useFocusEffect(
         React.useCallback(() => {
-        fetchPosts();
+            fetchPosts();
         }, [])
     );
 
