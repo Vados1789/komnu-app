@@ -1,6 +1,7 @@
 import React, { useContext } from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, StyleSheet } from 'react-native';
 import ProfilePictureComponent from '../../components/Profile/ProfilePictureComponent';
+import ProfileInfoComponent from '../../components/Profile/ProfileInfoComponent';
 import { AuthContext } from '../../context/AuthContext';
 
 const ProfileScreen = () => {
@@ -9,7 +10,7 @@ const ProfileScreen = () => {
   return (
     <View style={styles.container}>
       <ProfilePictureComponent />
-      <Text style={styles.username}>{user?.username || "Username"}</Text>
+      <ProfileInfoComponent localUser={user} />
     </View>
   );
 };
@@ -19,10 +20,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-  },
-  username: {
-    fontSize: 20,
-    marginTop: 10,
+    padding: 20,
   },
 });
 
