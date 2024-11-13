@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, TextInput } from 'react-native';
+import { useNavigation } from '@react-navigation/native';  // Import the useNavigation hook
 import AllGroupsComponent from '../../components/Groups/AllGroupsComponent';
 import MyGroupsComponent from '../../components/Groups/MyGroupsComponent';
 
 export default function GroupsScreen() {
   const [activeTab, setActiveTab] = useState('MyGroups');
   const [searchText, setSearchText] = useState('');
+  const navigation = useNavigation(); // Get navigation from the hook
 
   // Handle search input change
   const handleSearch = (text) => {
@@ -28,7 +30,7 @@ export default function GroupsScreen() {
     <View style={styles.container}>
       <TouchableOpacity
         style={styles.createGroupButton}
-        onPress={() => navigation.navigate('CreateGroupScreen')}
+        onPress={() => navigation.navigate('CreateGroupScreen')}  // Use navigation here
       >
         <Text style={styles.buttonText}>Create a Group</Text>
       </TouchableOpacity>
