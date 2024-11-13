@@ -25,40 +25,43 @@ export default function CreateGroupScreen({ navigation }) {
     }
   };
 
-  // Function to handle creating a group
-  const handleCreateGroup = async () => {
-    if (!groupName.trim() || !description.trim()) {
-      Alert.alert('Error', 'Group name and description cannot be empty.');
-      return;
-    }
+    // Function to handle creating a group
+    const handleCreateGroup = async () => {
+        if (!groupName.trim() || !description.trim()) {
+            Alert.alert('Error', 'Group name and description cannot be empty.');
+            return;
+        }
 
-    try {
-      const data = new FormData();
-      data.append('userId', user.userId);
-      data.append('groupName', groupName);
-      data.append('description', description);
+        try {
+            const data = new FormData();
+            data.append('userId', user.userId);
+            data.append('groupName', groupName);
+            data.append('description', description);
 
-      if (imageUri) {
-        const filename = imageUri.split('/').pop();
-        const fileType = filename.split('.').pop();
-        data.append('image', {
-          uri: imageUri,
-          name: filename,
-          type: `image/${fileType}`,
-        });
-      }
+            if (imageUri) {
+                const filename = imageUri.split('/').pop();
+                const fileType = filename.split('.').pop();
+                data.append('image', {
+                    uri: imageUri,
+                    name: filename,
+                    type: `image/${fileType}`,
+                });
+            }
 
-      await axios.post(`${API_BASE_URL}Groups/create`, data, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      });
+            console.log('Sending data:', data);  // Add logging to check the data being sent
 
-      Alert.alert('Success', 'Group created successfully!');
-      navigation.goBack(); // Navigate back to the groups list after creation
-    } catch (error) {
-      console.error('Error creating group:', error);
-      Alert.alert('Error', 'Could not create group.');
-    }
-  };
+            await axios.post(`${API_BASE_URL}Groups/create`, data, {
+                headers: { 'Content-Type': 'multipart/form-data' },
+            });
+
+            Alert.alert('Success', 'Group created successfully!');
+            navigation.goBack();
+        } catch (error) {
+            console.error('Error creating group:', error);
+            Alert.alert('Error', 'Could not create group.');
+        }
+    };
+
 
   return (
     <View style={styles.container}>

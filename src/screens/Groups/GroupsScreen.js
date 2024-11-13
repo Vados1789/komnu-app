@@ -1,112 +1,63 @@
-import React, { useState, useContext } from 'react';
-import { View, Text, TextInput, Button, StyleSheet, Alert, Image, TouchableOpacity } from 'react-native';
-import * as ImagePicker from 'expo-image-picker';
-import axios from 'axios';
-import API_BASE_URL from '../../config/apiConfig';
-import { AuthContext } from '../../context/AuthContext';
+import React, { useState } from 'react';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
+import MyGroupsComponent from '../../components/Groups/MyGroupsComponent';
+import AllGroupsComponent from '../../components/Groups/AllGroupsComponent';
+import { useNavigation } from '@react-navigation/native';
 
-export default function CreateGroupScreen({ navigation }) {
-  const { user } = useContext(AuthContext);
-  const [groupName, setGroupName] = useState('');
-  const [description, setDescription] = useState('');
-  const [imageUri, setImageUri] = useState(null);
+export default function GroupsScreen() {
+  const [activeTab, setActiveTab] = useState('MyGroups');
+  const [searchText, setSearchText] = useState('');
+  const navigation = useNavigation();
 
-  // Function to handle image selection from gallery
-  const pickImage = async () => {
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      aspect: [4, 3],
-      quality: 1,
-    });
-
-    if (!result.canceled) {
-      setImageUri(result.assets[0].uri);
-    }
+  // Handle search input change
+  const handleSearch = (text) => {
+    setSearchText(text);
   };
 
-  // Function to handle taking a photo with the camera
-  const takePhoto = async () => {
-    const result = await ImagePicker.launchCameraAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      aspect: [4, 3],
-      quality: 1,
-    });
-
-    if (!result.canceled) {
-      setImageUri(result.assets[0].uri);
-    }
-  };
-
-  // Function to handle creating a group
-  const handleCreateGroup = async () => {
-    if (!groupName.trim() || !description.trim()) {
-      Alert.alert('Error', 'Group name and description cannot be empty.');
-      return;
-    }
-
-    try {
-      const data = new FormData();
-      data.append('userId', user.userId);
-      data.append('groupName', groupName);
-      data.append('description', description);
-
-      if (imageUri) {
-        const filename = imageUri.split('/').pop();
-        const fileType = filename.split('.').pop();
-        data.append('image', {
-          uri: imageUri,
-          name: filename,
-          type: `image/${fileType}`,
-        });
-      }
-
-      await axios.post(`${API_BASE_URL}Groups/create`, data, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      });
-
-      Alert.alert('Success', 'Group created successfully!');
-      navigation.goBack(); // Navigate back to the groups list after creation
-    } catch (error) {
-      console.error('Error creating group:', error);
-      Alert.alert('Error', 'Could not create group.');
+  // Render the component based on activeTab
+  const renderComponent = () => {
+    switch (activeTab) {
+      case 'MyGroups':
+        return <MyGroupsComponent searchText={searchText} />;
+      case 'AllGroups':
+        return <AllGroupsComponent searchText={searchText} />;
+      default:
+        return <MyGroupsComponent searchText={searchText} />;
     }
   };
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Create Group</Text>
+      <TouchableOpacity
+        style={styles.createGroupButton}
+        onPress={() => navigation.navigate('CreateGroupScreen')} // Navigate to the CreateGroupScreen
+      >
+        <Text style={styles.buttonText}>Create a Group</Text>
+      </TouchableOpacity>
 
       <TextInput
-        style={styles.input}
-        placeholder="Group Name"
-        value={groupName}
-        onChangeText={setGroupName}
+        style={styles.searchBar}
+        placeholder="Search for groups..."
+        value={searchText}
+        onChangeText={handleSearch}
       />
 
-      <TextInput
-        style={styles.input}
-        placeholder="Group Description"
-        value={description}
-        onChangeText={setDescription}
-        multiline
-      />
+      <View style={styles.tabContainer}>
+        <TouchableOpacity
+          style={[styles.tabButton, activeTab === 'MyGroups' && styles.activeTab]}
+          onPress={() => setActiveTab('MyGroups')}
+        >
+          <Text style={styles.tabText}>My Groups</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.tabButton, activeTab === 'AllGroups' && styles.activeTab]}
+          onPress={() => setActiveTab('AllGroups')}
+        >
+          <Text style={styles.tabText}>All Groups</Text>
+        </TouchableOpacity>
+      </View>
 
-      {imageUri ? (
-        <Image source={{ uri: imageUri }} style={styles.imagePreview} />
-      ) : (
-        <View style={styles.buttonContainer}>
-          <TouchableOpacity onPress={takePhoto} style={styles.imagePicker}>
-            <Text style={styles.imagePickerText}>Take Photo</Text>
-          </TouchableOpacity>
-          <TouchableOpacity onPress={pickImage} style={styles.imagePicker}>
-            <Text style={styles.imagePickerText}>Select an Image</Text>
-          </TouchableOpacity>
-        </View>
-      )}
-
-      <Button title="Create Group" onPress={handleCreateGroup} color="blue" />
+      <View style={styles.componentContainer}>{renderComponent()}</View>
     </View>
   );
 }
@@ -114,42 +65,49 @@ export default function CreateGroupScreen({ navigation }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 20,
-    backgroundColor: '#fff',
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 20,
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: '#ccc',
     padding: 10,
-    marginBottom: 10,
+  },
+  createGroupButton: {
+    backgroundColor: '#007bff',
+    padding: 10,
     borderRadius: 5,
-  },
-  imagePreview: {
-    width: '100%',
-    height: 200,
-    borderRadius: 10,
+    alignItems: 'center',
     marginBottom: 10,
   },
-  buttonContainer: {
+  buttonText: {
+    color: 'white',
+    fontWeight: 'bold',
+  },
+  searchBar: {
+    height: 40,
+    borderColor: '#ccc',
+    borderWidth: 1,
+    borderRadius: 5,
+    paddingHorizontal: 10,
+    marginBottom: 10,
+  },
+  tabContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
+    marginBottom: 20,
   },
-  imagePicker: {
+  tabButton: {
     flex: 1,
-    backgroundColor: '#f0f0f0',
-    padding: 10,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: 5,
+    paddingVertical: 10,
     marginHorizontal: 5,
-    marginBottom: 10,
+    borderRadius: 5,
+    backgroundColor: '#f0f0f0',
+    alignItems: 'center',
   },
-  imagePickerText: {
-    color: '#555',
+  activeTab: {
+    backgroundColor: '#d3d3d3',
+  },
+  tabText: {
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  componentContainer: {
+    flex: 1,
+    marginTop: 10,
   },
 });
