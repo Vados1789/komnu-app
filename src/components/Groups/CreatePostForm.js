@@ -71,8 +71,17 @@ export default function CreatePostForm({ groupId, userId, onPostCreated }) {
 const styles = StyleSheet.create({
     container: { marginBottom: 20 },
     input: { borderColor: '#ccc', borderWidth: 1, padding: 10, marginBottom: 10 },
-    buttonContainer: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 10 },
-    imagePicker: { flex: 1, backgroundColor: '#e0e0e0', padding: 10, alignItems: 'center', borderRadius: 5 },
+    buttonContainer: { flexDirection: 'row', justifyContent: 'space-between' },
+    imagePicker: {
+        flex: 1,
+        backgroundColor: '#e0e0e0',
+        padding: 10,
+        alignItems: 'center',
+        justifyContent: 'center',
+        borderRadius: 5,
+        marginHorizontal: 5,
+        marginBottom: 10,
+    },
     imagePickerText: { color: '#666', fontWeight: '500' },
     imagePreview: { width: '100%', height: 200, borderRadius: 10, marginBottom: 10 },
 });
