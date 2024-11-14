@@ -1,11 +1,13 @@
 import React, { useEffect, useState, useContext } from 'react';
-import { View, Text, FlatList, StyleSheet, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, FlatList, StyleSheet, TouchableOpacity, Image, Alert } from 'react-native';
 import axios from 'axios';
 import { AuthContext } from '../../context/AuthContext';
 import API_BASE_URL from '../../config/apiConfig.js';
+import { useNavigation } from '@react-navigation/native';
 
 export default function MyGroupsComponent({ searchText }) {
     const { user } = useContext(AuthContext);
+    const navigation = useNavigation();
     const [myGroups, setMyGroups] = useState([]);
     const [filteredGroups, setFilteredGroups] = useState([]);
 
@@ -15,7 +17,6 @@ export default function MyGroupsComponent({ searchText }) {
                 try {
                     const response = await axios.get(`${API_BASE_URL}GroupMember/my-groups/${user.userId}`);
                     console.log('My groups received:', response.data);
-                    // Check if response has $values property and set groups accordingly
                     const groupsData = response.data?.$values || [];
                     setMyGroups(groupsData);
                     setFilteredGroups(groupsData);
@@ -60,13 +61,18 @@ export default function MyGroupsComponent({ searchText }) {
         }
     };
 
+    const handleOpenGroup = (groupId) => {
+        navigation.navigate('GroupContentScreen', { groupId });
+    };
+
     return (
         <FlatList
             data={filteredGroups}
             keyExtractor={(item) => item.groupId.toString()}
             ListEmptyComponent={<Text>No groups available.</Text>}
             renderItem={({ item }) => (
-                <View style={styles.groupContainer}>
+                <TouchableOpacity style={styles.groupContainer} onPress={() => handleOpenGroup(item.groupId)}>
+                    <Image source={{ uri: `${API_BASE_URL}${item.imageUrl}` }} style={styles.groupImage} />
                     <Text style={styles.groupName}>{item.groupName}</Text>
                     <TouchableOpacity
                         style={styles.leaveButton}
@@ -74,7 +80,7 @@ export default function MyGroupsComponent({ searchText }) {
                     >
                         <Text style={styles.leaveButtonText}>Leave Group</Text>
                     </TouchableOpacity>
-                </View>
+                </TouchableOpacity>
             )}
         />
     );
@@ -87,6 +93,12 @@ const styles = StyleSheet.create({
         padding: 10,
         borderBottomWidth: 1,
         borderBottomColor: '#ccc',
+    },
+    groupImage: {
+        width: 50,
+        height: 50,
+        borderRadius: 25,
+        marginRight: 10,
     },
     groupName: {
         fontSize: 18,
