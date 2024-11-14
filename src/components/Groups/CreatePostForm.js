@@ -1,4 +1,3 @@
-// CreatePostForm.js
 import React, { useState } from 'react';
 import { View, TextInput, Button, Alert, TouchableOpacity, Image, StyleSheet, Text } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
@@ -28,6 +27,8 @@ export default function CreatePostForm({ groupId, userId, onPostCreated }) {
             });
         }
 
+        console.log("FormData being sent:", data);
+
         try {
             await onPostCreated(data);
             setContent('');
@@ -43,7 +44,14 @@ export default function CreatePostForm({ groupId, userId, onPostCreated }) {
             ? await ImagePicker.launchCameraAsync({ mediaTypes: ImagePicker.MediaTypeOptions.Images, quality: 1 })
             : await ImagePicker.launchImageLibraryAsync({ mediaTypes: ImagePicker.MediaTypeOptions.Images, quality: 1 });
 
-        if (!result.canceled) setImageUri(result.uri);
+        console.log("ImagePicker result:", result);
+
+        if (!result.canceled && result.assets && result.assets[0]) {
+            setImageUri(result.assets[0].uri);
+            console.log("Image URI set:", result.assets[0].uri);
+        } else {
+            console.warn("No image selected.");
+        }
     };
 
     return (
