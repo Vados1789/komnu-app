@@ -19,25 +19,35 @@ export default function GroupContentScreen({ route }) {
             const response = await axios.get(`${API_BASE_URL}GroupPosts/${groupId}`);
             setPosts(response.data.reverse()); // Newest post at top
         } catch (error) {
-            console.error('Error fetching group posts:', error);
+            if (error.response && error.response.status === 404) {
+                console.log("No posts found for this group.");
+                setPosts([]); // Set posts to an empty array
+            } else {
+                console.error('Error fetching group posts:', error);
+            }
         }
     };
 
     const handleAddPost = async () => {
         try {
-            const data = { groupId, content: newPost };
+            const data = new FormData();
+            data.append('groupId', groupId);
+            data.append('content', newPost);
+
             if (imageUri) {
                 const filename = imageUri.split('/').pop();
                 const fileType = filename.split('.').pop();
-                data.image = {
+                data.append('image', {
                     uri: imageUri,
                     name: filename,
                     type: `image/${fileType}`,
-                };
+                });
             }
+
             await axios.post(`${API_BASE_URL}GroupPosts/add`, data, {
                 headers: { 'Content-Type': 'multipart/form-data' },
             });
+
             Alert.alert('Success', 'Post added successfully.');
             setNewPost('');
             setImageUri(null);
@@ -91,6 +101,7 @@ export default function GroupContentScreen({ route }) {
             <FlatList
                 data={posts}
                 keyExtractor={(item) => item.id.toString()}
+                ListEmptyComponent={<Text style={styles.emptyText}>No posts in group yet.</Text>}
                 renderItem={({ item }) => (
                     <View style={styles.postContainer}>
                         <Text style={styles.postContent}>{item.content}</Text>
@@ -110,6 +121,7 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         padding: 10,
+        backgroundColor: '#fff',
     },
     input: {
         borderColor: '#ccc',
@@ -159,5 +171,11 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         justifyContent: 'space-between',
         marginTop: 10,
+    },
+    emptyText: {
+        textAlign: 'center',
+        fontSize: 16,
+        color: '#888',
+        marginTop: 20,
     },
 });
