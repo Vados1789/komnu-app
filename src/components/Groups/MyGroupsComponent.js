@@ -3,6 +3,7 @@ import { View, Text, FlatList, StyleSheet, TouchableOpacity, Image, Alert } from
 import axios from 'axios';
 import { AuthContext } from '../../context/AuthContext';
 import API_BASE_URL from '../../config/apiConfig.js';
+import IMAGE_BASE_URL from '../../config/imageConfig.js'; // Import IMAGE_BASE_URL here
 import { useNavigation } from '@react-navigation/native';
 
 export default function MyGroupsComponent({ searchText }) {
@@ -11,18 +12,18 @@ export default function MyGroupsComponent({ searchText }) {
     const [myGroups, setMyGroups] = useState([]);
     const [filteredGroups, setFilteredGroups] = useState([]);
 
+    const defaultImageUri = 'https://example.com/default-image.png'; // Replace with actual default image URL
+
     useEffect(() => {
         const fetchMyGroups = async () => {
             if (user && user.userId) {
                 try {
                     const response = await axios.get(`${API_BASE_URL}GroupMember/my-groups/${user.userId}`);
-                    console.log('My groups received:', response.data);
-                    const groupsData = response.data?.$values || [];
+                    const groupsData = response.data?.$values || response.data || []; 
                     setMyGroups(groupsData);
                     setFilteredGroups(groupsData);
                 } catch (error) {
                     if (error.response && error.response.status === 404) {
-                        console.log('No groups found for the user.');
                         setMyGroups([]);
                         setFilteredGroups([]);
                     } else {
@@ -32,7 +33,6 @@ export default function MyGroupsComponent({ searchText }) {
                 }
             }
         };
-
         fetchMyGroups();
     }, [user]);
 
@@ -72,7 +72,13 @@ export default function MyGroupsComponent({ searchText }) {
             ListEmptyComponent={<Text>No groups available.</Text>}
             renderItem={({ item }) => (
                 <TouchableOpacity style={styles.groupContainer} onPress={() => handleOpenGroup(item.groupId)}>
-                    <Image source={{ uri: `${API_BASE_URL}${item.imageUrl}` }} style={styles.groupImage} />
+                    <Image 
+                        source={{ 
+                            uri: item.imageUrl ? `${IMAGE_BASE_URL}${item.imageUrl}` : defaultImageUri
+                        }}
+                        style={styles.groupImage} 
+                        onError={() => (item.imageUrl = defaultImageUri)}
+                    />
                     <Text style={styles.groupName}>{item.groupName}</Text>
                     <TouchableOpacity
                         style={styles.leaveButton}
