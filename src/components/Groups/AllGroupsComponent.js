@@ -13,13 +13,20 @@ export default function AllGroupsComponent({ searchText }) {
     const fetchAllGroups = async () => {
       try {
         const response = await axios.get(`${API_BASE_URL}Groups`);
-        setAllGroups(response.data);
-        setFilteredGroups(response.data);
+        console.log('All groups:', response.data);
+  
+        // Extract groups from the response if in the `$values` structure
+        const groups = response.data.$values || response.data;
+        setAllGroups(groups);
+        setFilteredGroups(groups);
       } catch (error) {
         console.error('Error fetching all groups:', error);
+        if (error.response) {
+          console.log("Error response data:", error.response.data);
+        }
       }
     };
-
+  
     fetchAllGroups();
   }, []);
 
