@@ -1,22 +1,22 @@
 import React, { useEffect, useState, useContext } from 'react';
-import { View, Text, FlatList, StyleSheet, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, FlatList, StyleSheet, TouchableOpacity, Image, Alert } from 'react-native';
 import axios from 'axios';
 import { AuthContext } from '../../context/AuthContext';
 import API_BASE_URL from '../../config/apiConfig.js';
+import IMAGE_BASE_URL from '../../config/imageConfig.js'; // Import IMAGE_BASE_URL
 
 export default function AllGroupsComponent({ searchText }) {
   const { user } = useContext(AuthContext);
   const [allGroups, setAllGroups] = useState([]);
   const [filteredGroups, setFilteredGroups] = useState([]);
 
+  const defaultImageUri = 'https://example.com/default-image.png'; // Replace with actual default image URL
+
   useEffect(() => {
     const fetchAllGroups = async () => {
       try {
         const response = await axios.get(`${API_BASE_URL}Groups`);
-        console.log('All groups:', response.data);
-  
-        // Extract groups from the response if in the `$values` structure
-        const groups = response.data.$values || response.data;
+        const groups = response.data.$values || response.data; // Handle multiple formats
         setAllGroups(groups);
         setFilteredGroups(groups);
       } catch (error) {
@@ -26,7 +26,6 @@ export default function AllGroupsComponent({ searchText }) {
         }
       }
     };
-  
     fetchAllGroups();
   }, []);
 
@@ -46,7 +45,6 @@ export default function AllGroupsComponent({ searchText }) {
     try {
       await axios.post(`${API_BASE_URL}Groups/join/${user.userId}/${groupId}`);
       Alert.alert('Success', 'You have joined the group.');
-      // Optionally, refresh My Groups or show some confirmation
     } catch (error) {
       console.error('Error joining group:', error);
       Alert.alert('Error', 'Unable to join the group.');
@@ -60,6 +58,13 @@ export default function AllGroupsComponent({ searchText }) {
       ListEmptyComponent={<Text>No groups available.</Text>}
       renderItem={({ item }) => (
         <View style={styles.groupContainer}>
+          <Image 
+            source={{ 
+              uri: item.imageUrl ? `${IMAGE_BASE_URL}${item.imageUrl}` : defaultImageUri 
+            }}
+            style={styles.groupImage} 
+            onError={() => (item.imageUrl = defaultImageUri)}
+          />
           <Text style={styles.groupName}>{item.groupName}</Text>
           <TouchableOpacity
             style={styles.joinButton}
@@ -80,6 +85,12 @@ const styles = StyleSheet.create({
     padding: 10,
     borderBottomWidth: 1,
     borderBottomColor: '#ccc',
+  },
+  groupImage: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    marginRight: 10,
   },
   groupName: {
     fontSize: 18,
