@@ -12,7 +12,7 @@ export default function AllGroupsComponent({ searchText }) {
   useEffect(() => {
     const fetchAllGroups = async () => {
       try {
-        const response = await axios.get(`${API_BASE_URL}Groups/all-groups`);
+        const response = await axios.get(`${API_BASE_URL}Groups`);
         setAllGroups(response.data);
         setFilteredGroups(response.data);
       } catch (error) {
