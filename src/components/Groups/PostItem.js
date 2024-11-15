@@ -1,4 +1,3 @@
-// PostItem.js
 import React, { useContext, useState, useEffect } from 'react';
 import { View, Text, Image, StyleSheet, TouchableOpacity, Alert } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
@@ -7,8 +6,9 @@ import API_BASE_URL from '../../config/apiConfig';
 import IMAGE_BASE_URL from '../../config/imageConfig.js';
 import { AuthContext } from '../../context/AuthContext';
 import { FontAwesome } from '@expo/vector-icons';
+import usePostSignalR from '../../hooks/usePostSignalR';
 
-export default function PostItem({ post, onDelete }) {
+export default function PostItem({ post, onDelete, onNewPost }) {
   const { user } = useContext(AuthContext);
   const navigation = useNavigation();
   const [commentCount, setCommentCount] = useState(0);
@@ -16,81 +16,68 @@ export default function PostItem({ post, onDelete }) {
   const [dislikeCount, setDislikeCount] = useState(post.dislikeCount || 0);
   const [userReaction, setUserReaction] = useState(null);
 
-  useEffect(() => {
-    const fetchCommentCount = async () => {
-      const url = `${API_BASE_URL}GroupPostComments/${post.postId}/count`;
-      console.log(`Fetching comment count from: ${url}`);
-      
-      try {
-        const response = await axios.get(url);
-        console.log('Comment count:', response.data);
-        setCommentCount(response.data);
-      } catch (error) {
-        console.error('Error fetching comment count:', error);
-      }
-    };
-    fetchCommentCount();
-
-    const fetchReactionData = async () => {
-      const reactionsUrl = `${API_BASE_URL}GroupPostReactions/post/${post.postId}`;
-      const userReactionUrl = `${API_BASE_URL}GroupPostReactions/post/${post.postId}/user/${user.userId}`;
-      
-      console.log(`Fetching reactions from: ${reactionsUrl}`);
-      console.log(`Fetching user reaction from: ${userReactionUrl}`);
-      
-      try {
-        // Fetch overall reactions
-        const countsResponse = await axios.get(reactionsUrl);
-        console.log('Reactions response data:', countsResponse.data);
-        setLikeCount(countsResponse.data.LikeCount || 0);
-        setDislikeCount(countsResponse.data.DislikeCount || 0);
-
-        // Fetch user-specific reaction
-        const userReactionResponse = await axios.get(userReactionUrl);
-        console.log('User reaction response data:', userReactionResponse.data);
-        setUserReaction(userReactionResponse.data.ReactionType); // May be null
-      } catch (error) {
-        if (error.response) {
-          console.error('Error fetching reactions - status:', error.response.status);
-          console.error('Error fetching reactions - data:', error.response.data);
-        } else {
-          console.error('Error fetching reactions:', error.message);
-        }
-      }
-    };
-    fetchReactionData();
-  }, [post.postId, user.userId]);
-
-
-  const handleLikePress = async () => {
-    try {
-      const newReaction = userReaction === 'like' ? null : 'like'; // Toggle like
-      const response = await axios.post(`${API_BASE_URL}GroupPostReactions`, {
-        postId: post.postId,
-        userId: user.userId,
-        reactionType: newReaction,
-      });
-      setUserReaction(newReaction);
-      setLikeCount(response.data.likeCount);
-      setDislikeCount(response.data.dislikeCount);
-    } catch (error) {
-      console.error('Error liking post:', error);
+  // Real-time reaction updates
+  const handleReactionUpdate = (update) => {
+    if (update.postId === post.postId) {
+      console.log('Real-time reaction update received:', update);
+      setLikeCount(update.likeCount);
+      setDislikeCount(update.dislikeCount);
     }
   };
 
-  const handleDislikePress = async () => {
+  const handleNewPost = (newPost) => {
+    onNewPost(newPost);
+  };
+
+  // Using SignalR for real-time updates
+  usePostSignalR(handleReactionUpdate, handleNewPost);
+
+  useEffect(() => {
+    const fetchCommentCount = async () => {
+      try {
+        const response = await axios.get(`${API_BASE_URL}GroupPostComments/${post.postId}/count`);
+        console.log(`Fetched comment count for post ${post.postId}:`, response.data);
+        setCommentCount(response.data || 0);
+      } catch (error) {
+        console.error(`Error fetching comment count for post ${post.postId}:`, error);
+      }
+    };
+
+    const fetchReactionData = async () => {
+      try {
+        const reactionsResponse = await axios.get(`${API_BASE_URL}GroupPostReactions/post/${post.postId}`);
+        console.log(`Fetched reactions data for post ${post.postId}:`, reactionsResponse.data);
+        setLikeCount(reactionsResponse.data.likeCount || 0);
+        setDislikeCount(reactionsResponse.data.dislikeCount || 0);
+
+        const userReactionResponse = await axios.get(`${API_BASE_URL}GroupPostReactions/post/${post.postId}/user/${user.userId}`);
+        console.log(`Fetched user reaction data for post ${post.postId} and user ${user.userId}:`, userReactionResponse.data);
+        setUserReaction(userReactionResponse.data.reactionType || null);
+      } catch (error) {
+        console.error(`Error fetching reactions for post ${post.postId}:`, error);
+      }
+    };
+
+    console.log(`Fetching initial comment and reaction data for post: ${post.postId}`);
+    fetchCommentCount();
+    fetchReactionData();
+  }, [post.postId, user.userId]);
+
+  const handleReaction = async (reactionType) => {
+    const newReaction = userReaction === reactionType ? null : reactionType;
+    console.log(`Sending reaction: ${newReaction} for post: ${post.postId}`);
     try {
-      const newReaction = userReaction === 'dislike' ? null : 'dislike'; // Toggle dislike
       const response = await axios.post(`${API_BASE_URL}GroupPostReactions`, {
         postId: post.postId,
         userId: user.userId,
         reactionType: newReaction,
       });
+      console.log(`Reaction update response for post ${post.postId}:`, response.data);
       setUserReaction(newReaction);
-      setLikeCount(response.data.likeCount);
-      setDislikeCount(response.data.dislikeCount);
+      setLikeCount(response.data.likeCount || 0);
+      setDislikeCount(response.data.dislikeCount || 0);
     } catch (error) {
-      console.error('Error disliking post:', error);
+      console.error(`Error updating reaction for post ${post.postId}:`, error);
     }
   };
 
@@ -108,7 +95,7 @@ export default function PostItem({ post, onDelete }) {
               onDelete(post.postId);
             }
           } catch (error) {
-            console.error('Error deleting post:', error);
+            console.error(`Error deleting post ${post.postId}:`, error);
             Alert.alert('Error', 'Failed to delete the post.');
           }
         },
@@ -119,6 +106,9 @@ export default function PostItem({ post, onDelete }) {
   const handleCommentPress = () => {
     navigation.navigate('GroupCommentsScreen', { postId: post.postId });
   };
+
+  console.log(`Rendering PostItem for post ${post.postId}`);
+  console.log(`Like Count: ${likeCount}, Dislike Count: ${dislikeCount}, User Reaction: ${userReaction}`);
 
   return (
     <View style={styles.postContainer}>
@@ -143,17 +133,17 @@ export default function PostItem({ post, onDelete }) {
       <View style={styles.actionButtons}>
         {/* Reactions on the left */}
         <View style={styles.leftButtons}>
-          <TouchableOpacity onPress={handleLikePress} style={styles.reactionButton}>
+          <TouchableOpacity onPress={() => handleReaction('like')} style={styles.reactionButton}>
             <FontAwesome name={userReaction === 'like' ? 'thumbs-up' : 'thumbs-o-up'} size={20} color="blue" />
             <Text style={styles.reactionCount}>{likeCount}</Text>
           </TouchableOpacity>
-          <TouchableOpacity onPress={handleDislikePress} style={styles.reactionButton}>
+          <TouchableOpacity onPress={() => handleReaction('dislike')} style={styles.reactionButton}>
             <FontAwesome name={userReaction === 'dislike' ? 'thumbs-down' : 'thumbs-o-down'} size={20} color="red" />
             <Text style={styles.reactionCount}>{dislikeCount}</Text>
           </TouchableOpacity>
         </View>
 
-        {/* Delete button on the right */}
+        {/* Edit and Delete on the right */}
         {user?.userId === post.userId && (
           <View style={styles.rightButtons}>
             <TouchableOpacity style={styles.deleteButton} onPress={handleDeletePress}>
@@ -177,7 +167,6 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderColor: '#ddd',
     backgroundColor: '#fff',
-    marginBottom: 10,
   },
   userInfo: {
     flexDirection: 'row',
@@ -195,7 +184,6 @@ const styles = StyleSheet.create({
   },
   content: {
     marginBottom: 10,
-    fontSize: 16,
   },
   postImage: {
     width: '100%',
