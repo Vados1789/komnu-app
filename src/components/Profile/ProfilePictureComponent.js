@@ -1,13 +1,12 @@
 import React, { useContext } from 'react';
 import { Image, TouchableOpacity, Alert, StyleSheet } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage'; // Import AsyncStorage
 import * as ImagePicker from 'expo-image-picker';
 import { AuthContext } from '../../context/AuthContext';
 import IMAGE_BASE_URL from '../../config/imageConfig';
 import updateUserProfilePicture from './UpdateUserProfilePicture';
 
-const DEFAULT_IMAGE_URL = 'https://via.placeholder.com/100';
-
-const ProfilePictureComponent = () => {
+const ProfilePictureComponent = ({ editable }) => {
   const { user, login } = useContext(AuthContext);
 
   const handleImagePick = () => {
@@ -23,41 +22,32 @@ const ProfilePictureComponent = () => {
   };
 
   const pickImage = async (source) => {
-    try {
-      let result;
-      if (source === 'camera') {
-        result = await ImagePicker.launchCameraAsync({
-          allowsEditing: true,
-          aspect: [1, 1],
-          quality: 1,
-        });
-      } else {
-        result = await ImagePicker.launchImageLibraryAsync({
-          allowsEditing: true,
-          aspect: [1, 1],
-          quality: 1,
-        });
-      }
+    let result;
+    if (source === 'camera') {
+      result = await ImagePicker.launchCameraAsync({ allowsEditing: true, aspect: [1, 1], quality: 1 });
+    } else {
+      result = await ImagePicker.launchImageLibraryAsync({ allowsEditing: true, aspect: [1, 1], quality: 1 });
+    }
 
-      if (!result.cancelled && result.assets && result.assets.length > 0) {
-        const imageUri = result.assets[0].uri;
-        const updatedUser = await updateUserProfilePicture(user.userId, imageUri);
-        if (updatedUser) {
-          await login(updatedUser); // Update user data in AuthContext
+    if (!result.canceled && result.assets && result.assets.length > 0) {
+      const imageUri = result.assets[0].uri;
+      const updatedUser = await updateUserProfilePicture(user.userId, imageUri);
+      
+      if (updatedUser) {
+        try {
+          await AsyncStorage.setItem('user', JSON.stringify(updatedUser)); // Save updated data to AsyncStorage
+        } catch (error) {
+          console.log("Error saving updated user data to AsyncStorage:", error);
         }
+        await login(updatedUser); // Update context
       }
-    } catch (error) {
-      console.error("Error picking image:", error);
-      Alert.alert("Error", "Could not update profile picture. Please try again.");
     }
   };
 
-  const profilePictureUrl = user?.profilePicture
-    ? `${IMAGE_BASE_URL}${user.profilePicture}`
-    : DEFAULT_IMAGE_URL;
+  const profilePictureUrl = user?.profilePicture ? `${IMAGE_BASE_URL}${user.profilePicture}` : 'https://via.placeholder.com/100';
 
   return (
-    <TouchableOpacity onPress={handleImagePick}>
+    <TouchableOpacity onPress={editable ? handleImagePick : null} activeOpacity={editable ? 0.7 : 1}>
       <Image source={{ uri: profilePictureUrl }} style={styles.image} />
     </TouchableOpacity>
   );

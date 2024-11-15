@@ -2,11 +2,11 @@ import { Alert } from 'react-native';
 import axios from 'axios';
 import API_BASE_URL from '../../config/apiConfig';
 
-const mimeTypes = { jpg: 'image/jpeg', jpeg: 'image/jpeg', png: 'image/png', gif: 'image/gif' };
+const mimeTypes = { jpg: 'image/jpeg', jpeg: 'image/jpeg', png: 'image/png' };
 
 const updateUserProfilePicture = async (userId, newProfilePictureUri) => {
   if (!userId || !newProfilePictureUri) {
-    Alert.alert('Error', !userId ? 'User ID is required.' : 'Please select a new profile picture.');
+    Alert.alert('Error', 'User ID and new profile picture URI are required.');
     return null;
   }
 
@@ -26,8 +26,11 @@ const updateUserProfilePicture = async (userId, newProfilePictureUri) => {
 
     if (status === 200 && data) {
       const profilePictureUrl = data.ProfilePictureUrl || data.user?.profilePicture || data.profilePicture;
-      if (profilePictureUrl) return { ...data.user, profilePicture: profilePictureUrl };
-      Alert.alert('Upload Successful', 'But profile picture URL is missing. Try reloading.');
+      if (profilePictureUrl) {
+        return { ...data.user, profilePicture: profilePictureUrl };
+      } else {
+        Alert.alert('Upload Successful', 'Profile picture URL missing. Try reloading.');
+      }
     } else {
       Alert.alert('Upload Failed', 'Unexpected response format.');
     }

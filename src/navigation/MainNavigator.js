@@ -13,6 +13,7 @@ import FullScreenImageScreen from '../screens/Posts/FullScreenImageScreen';
 import CommentsScreen from '../screens/Posts/CommentsScreen';
 import CreateGroupScreen from '../screens/Groups/CreateGroupScreen';
 import GroupContentScreen from '../screens/Groups/GroupContentScreen';
+import EditProfileScreen from '../screens/Profile/EditProfileScreen';
 
 const Stack = createStackNavigator();
 
@@ -32,6 +33,7 @@ export default function MainNavigator() {
         <Stack.Screen name="CommentsScreen" component={CommentsScreen} options={{ title: 'Comments' }} />
         <Stack.Screen name="CreateGroupScreen" component={CreateGroupScreen} options={{ title: 'Create Group' }} />
         <Stack.Screen name="GroupContentScreen" component={GroupContentScreen} options={{ title: 'Group Content' }} />
+        <Stack.Screen name="EditProfileScreen" component={EditProfileScreen} options={{ title: 'Edit Profile' }} />
       </Stack.Navigator>
     </NavigationContainer>
   );

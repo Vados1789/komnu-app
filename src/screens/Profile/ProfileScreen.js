@@ -1,15 +1,26 @@
-import React, { useContext } from 'react';
-import { View, StyleSheet } from 'react-native';
+import React, { useContext, useLayoutEffect } from 'react';
+import { View, TouchableOpacity, StyleSheet } from 'react-native';
+import Icon from 'react-native-vector-icons/MaterialIcons';
 import ProfilePictureComponent from '../../components/Profile/ProfilePictureComponent';
 import ProfileInfoComponent from '../../components/Profile/ProfileInfoComponent';
 import { AuthContext } from '../../context/AuthContext';
 
-const ProfileScreen = () => {
+const ProfileScreen = ({ navigation }) => {
   const { user } = useContext(AuthContext);
+
+  useLayoutEffect(() => {
+    navigation.setOptions({
+      headerRight: () => (
+        <TouchableOpacity onPress={() => navigation.navigate('EditProfileScreen')}>
+          <Icon name="edit" size={24} color="#007bff" style={{ marginRight: 15 }} />
+        </TouchableOpacity>
+      ),
+    });
+  }, [navigation]);
 
   return (
     <View style={styles.container}>
-      <ProfilePictureComponent />
+      <ProfilePictureComponent editable={false} />
       <ProfileInfoComponent localUser={user} />
     </View>
   );
