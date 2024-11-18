@@ -1,27 +1,32 @@
-// GroupCommentsScreen.js
 import React, { useEffect, useState, useContext } from 'react';
-import { View, FlatList, TextInput, TouchableOpacity, Text, StyleSheet, Alert } from 'react-native';
+import { View, FlatList, TextInput, TouchableOpacity, Text, StyleSheet, Alert, Image } from 'react-native';
 import axios from 'axios';
 import API_BASE_URL from '../../config/apiConfig';
+import IMAGE_BASE_URL from '../../config/imageConfig';
 import { AuthContext } from '../../context/AuthContext';
 import GroupCommentComponent from '../../components/Groups/GroupCommentComponent';
 
 export default function GroupCommentsScreen({ route }) {
-  const { postId } = route.params;
+  const { postId, post } = route.params; // Post details passed from navigation
   const { user } = useContext(AuthContext);
   const [comments, setComments] = useState([]);
   const [commentContent, setCommentContent] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     fetchComments();
   }, [postId]);
 
   const fetchComments = async () => {
+    setIsLoading(true);
     try {
       const response = await axios.get(`${API_BASE_URL}GroupPostComments/${postId}`);
       setComments(response.data);
     } catch (error) {
       console.error('Error fetching comments:', error);
+      Alert.alert('Error', 'Unable to fetch comments.');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -37,30 +42,38 @@ export default function GroupCommentsScreen({ route }) {
         content: commentContent,
       });
       setCommentContent('');
-      fetchComments();
+      fetchComments(); // Refresh comments after adding
     } catch (error) {
       console.error('Error adding comment:', error);
+      Alert.alert('Error', 'Could not add comment.');
     }
   };
 
   const handleDeleteComment = async (commentId) => {
     try {
       await axios.delete(`${API_BASE_URL}GroupPostComments/delete/${commentId}`);
-      fetchComments();
+      fetchComments(); // Refresh comments after deleting
     } catch (error) {
       console.error('Error deleting comment:', error);
+      Alert.alert('Error', 'Could not delete comment.');
     }
   };
 
   const renderCommentItem = ({ item }) => (
-    <GroupCommentComponent
-      comment={item}
-      onDelete={handleDeleteComment}
-    />
+    <GroupCommentComponent comment={item} onDelete={handleDeleteComment} />
   );
 
   return (
     <View style={styles.container}>
+      {/* Post Details */}
+      <View style={styles.postContainer}>
+        <Text style={styles.postContent}>{post.content}</Text>
+        {post.imagePath && (
+          <Image source={{ uri: `${IMAGE_BASE_URL}${post.imagePath}` }} style={styles.postImage} />
+        )}
+      </View>
+
+      {/* Comments List */}
       <FlatList
         data={comments}
         keyExtractor={(item) => item.commentId.toString()}
@@ -69,6 +82,7 @@ export default function GroupCommentsScreen({ route }) {
         contentContainerStyle={styles.commentsList}
       />
 
+      {/* Add Comment Input */}
       <View style={styles.inputContainer}>
         <TextInput
           style={styles.input}
@@ -88,6 +102,21 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 10,
+  },
+  postContainer: {
+    marginBottom: 10,
+    padding: 10,
+    borderBottomWidth: 1,
+    borderColor: '#ddd',
+  },
+  postContent: {
+    fontSize: 16,
+    marginBottom: 10,
+  },
+  postImage: {
+    width: '100%',
+    height: 200,
+    borderRadius: 10,
   },
   commentsList: {
     paddingBottom: 60,

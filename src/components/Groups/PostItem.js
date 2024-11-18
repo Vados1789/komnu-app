@@ -104,7 +104,7 @@ export default function PostItem({ post, onDelete, onNewPost }) {
   };
 
   const handleCommentPress = () => {
-    navigation.navigate('GroupCommentsScreen', { postId: post.postId });
+    navigation.navigate('GroupCommentsScreen', { postId: post.postId, post });
   };
 
   console.log(`Rendering PostItem for post ${post.postId}`);
