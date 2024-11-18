@@ -14,16 +14,19 @@ export default function GroupCommentsScreen({ route }) {
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
+    console.log('Route params:', route.params); // Verify route parameters
     fetchComments();
   }, [postId]);
 
   const fetchComments = async () => {
+    console.log(`Fetching comments for postId: ${postId}`); // Log postId
     setIsLoading(true);
     try {
-      const response = await axios.get(`${API_BASE_URL}GroupPostComments/${postId}`);
-      setComments(response.data);
+      const response = await axios.get(`${API_BASE_URL}GroupComments/${postId}`); // Updated endpoint
+      console.log('Comments fetched:', response.data); // Log API response
+      setComments(response.data); // Update comments
     } catch (error) {
-      console.error('Error fetching comments:', error);
+      console.error('Error fetching comments:', error.response || error.message);
       Alert.alert('Error', 'Unable to fetch comments.');
     } finally {
       setIsLoading(false);
@@ -35,26 +38,30 @@ export default function GroupCommentsScreen({ route }) {
       Alert.alert('Error', 'Comment content cannot be empty.');
       return;
     }
+    console.log('Adding comment:', { postId, userId: user.userId, content: commentContent }); // Log data being sent
     try {
-      await axios.post(`${API_BASE_URL}GroupPostComments/add`, {
+      const response = await axios.post(`${API_BASE_URL}GroupPostComments/add`, {
         postId,
         userId: user.userId,
         content: commentContent,
       });
+      console.log('Comment added successfully:', response.data); // Log success response
       setCommentContent('');
-      fetchComments(); // Refresh comments after adding
+      fetchComments(); // Refresh comments
     } catch (error) {
-      console.error('Error adding comment:', error);
+      console.error('Error adding comment:', error.response || error.message);
       Alert.alert('Error', 'Could not add comment.');
     }
   };
 
   const handleDeleteComment = async (commentId) => {
+    console.log(`Deleting comment with ID: ${commentId}`); // Log comment ID
     try {
-      await axios.delete(`${API_BASE_URL}GroupPostComments/delete/${commentId}`);
-      fetchComments(); // Refresh comments after deleting
+      const response = await axios.delete(`${API_BASE_URL}GroupPostComments/delete/${commentId}`);
+      console.log('Comment deleted successfully:', response.data); // Log success response
+      fetchComments(); // Refresh comments
     } catch (error) {
-      console.error('Error deleting comment:', error);
+      console.error('Error deleting comment:', error.response || error.message);
       Alert.alert('Error', 'Could not delete comment.');
     }
   };
