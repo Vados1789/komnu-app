@@ -10,7 +10,7 @@ export default function AllGroupsComponent({ searchText }) {
   const [allGroups, setAllGroups] = useState([]);
   const [filteredGroups, setFilteredGroups] = useState([]);
 
-  const defaultImageUri = 'https://example.com/default-image.png'; // Replace with your actual default image URL
+  const defaultImageUri = 'https://upload.wikimedia.org/wikipedia/commons/8/89/Portrait_Placeholder.png';
 
   // Fetch all groups on mount
   useEffect(() => {
@@ -49,10 +49,9 @@ export default function AllGroupsComponent({ searchText }) {
     try {
       const response = await axios.post(
         `${API_BASE_URL}Groups/join/${groupId}`,
-        user.userId, // Pass the userId directly as the body
+        user.userId,
         { headers: { 'Content-Type': 'application/json' } }
       );
-      Alert.alert('Success', response.data || 'You have joined the group.');
   
       // Update group status immediately
       setAllGroups((prevGroups) =>
@@ -77,11 +76,10 @@ export default function AllGroupsComponent({ searchText }) {
     try {
       const response = await axios.post(
         `${API_BASE_URL}Groups/leave/${groupId}`,
-        { userId: user.userId },
-        { headers: { 'Content-Type': 'application/json' } }
+        user.userId, // Pass the userId directly as the body
+        { headers: { 'Content-Type': 'application/json' } } // Ensure correct headers
       );
-      Alert.alert('Success', response.data || 'You have left the group.');
-
+  
       // Update group status immediately
       setAllGroups((prevGroups) =>
         prevGroups.map((group) =>
@@ -92,10 +90,13 @@ export default function AllGroupsComponent({ searchText }) {
       );
     } catch (error) {
       console.error('Error leaving group:', error);
+  
+      // Extract and display a detailed error message if available
       const errorMessage =
-        typeof error.response?.data === 'string'
-          ? error.response?.data
-          : 'Unable to leave the group.';
+        error.response?.data?.errors?.$?.[0] ||
+        error.response?.data ||
+        'Unable to leave the group.';
+  
       Alert.alert('Error', errorMessage);
     }
   };
