@@ -20,7 +20,12 @@ export default function GroupContentScreen({ route }) {
             const response = await axios.get(`${API_BASE_URL}GroupPosts/${groupId}`);
             setPosts(response.data.reverse());
         } catch (error) {
-            console.error('Error fetching group posts:', error);
+            if (error.response && error.response.status === 404) {
+                console.log('No posts found for this group.');
+                setPosts([]);
+            } else {
+                console.error('Error fetching group posts:', error);
+            }
         }
     };
 
