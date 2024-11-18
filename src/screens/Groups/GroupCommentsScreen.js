@@ -1,30 +1,27 @@
+// GroupCommentsScreen.js
 import React, { useEffect, useState, useContext } from 'react';
-import { View, FlatList, TextInput, TouchableOpacity, Text, Image, StyleSheet, Alert } from 'react-native';
+import { View, FlatList, TextInput, TouchableOpacity, Text, StyleSheet, Alert } from 'react-native';
 import axios from 'axios';
 import API_BASE_URL from '../../config/apiConfig';
-import IMAGE_BASE_URL from '../../config/imageConfig';
 import { AuthContext } from '../../context/AuthContext';
 import GroupCommentComponent from '../../components/Groups/GroupCommentComponent';
 
 export default function GroupCommentsScreen({ route }) {
   const { postId } = route.params;
   const { user } = useContext(AuthContext);
-  const [post, setPost] = useState(null);
   const [comments, setComments] = useState([]);
   const [commentContent, setCommentContent] = useState('');
 
   useEffect(() => {
-    fetchPostWithComments();
+    fetchComments();
   }, [postId]);
 
-  const fetchPostWithComments = async () => {
+  const fetchComments = async () => {
     try {
-      const response = await axios.get(`${API_BASE_URL}GroupPostComments/post/${postId}`);
-      setPost(response.data.Post);
-      setComments(response.data.Comments);
+      const response = await axios.get(`${API_BASE_URL}GroupPostComments/${postId}`);
+      setComments(response.data);
     } catch (error) {
-      console.error(`Error fetching post and comments for post ${postId}:`, error);
-      Alert.alert('Error', 'Failed to load post and comments.');
+      console.error('Error fetching comments:', error);
     }
   };
 
@@ -40,20 +37,18 @@ export default function GroupCommentsScreen({ route }) {
         content: commentContent,
       });
       setCommentContent('');
-      fetchPostWithComments();
+      fetchComments();
     } catch (error) {
-      console.error(`Error adding comment for post ${postId}:`, error);
-      Alert.alert('Error', 'Failed to add comment.');
+      console.error('Error adding comment:', error);
     }
   };
 
   const handleDeleteComment = async (commentId) => {
     try {
       await axios.delete(`${API_BASE_URL}GroupPostComments/delete/${commentId}`);
-      fetchPostWithComments();
+      fetchComments();
     } catch (error) {
-      console.error(`Error deleting comment ${commentId}:`, error);
-      Alert.alert('Error', 'Failed to delete comment.');
+      console.error('Error deleting comment:', error);
     }
   };
 
@@ -66,30 +61,9 @@ export default function GroupCommentsScreen({ route }) {
 
   return (
     <View style={styles.container}>
-      {post && (
-        <View style={styles.postDetails}>
-          <View style={styles.postHeader}>
-            {post.User?.ProfilePicture && (
-              <Image
-                source={{ uri: `${IMAGE_BASE_URL}${post.User.ProfilePicture}` }}
-                style={styles.userImage}
-              />
-            )}
-            <Text style={styles.username}>{post.User?.Username || 'Unknown User'}</Text>
-          </View>
-          <Text style={styles.postContent}>{post.Content}</Text>
-          {post.ImagePath && (
-            <Image
-              source={{ uri: `${IMAGE_BASE_URL}${post.ImagePath}` }}
-              style={styles.postImage}
-            />
-          )}
-        </View>
-      )}
-
       <FlatList
         data={comments}
-        keyExtractor={(item) => item.CommentId.toString()}
+        keyExtractor={(item) => item.commentId.toString()}
         renderItem={renderCommentItem}
         ListEmptyComponent={<Text style={styles.emptyText}>No comments yet.</Text>}
         contentContainerStyle={styles.commentsList}
@@ -114,40 +88,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 10,
-  },
-  postDetails: {
-    marginBottom: 20,
-    padding: 10,
-    backgroundColor: '#fff',
-    borderRadius: 10,
-    shadowColor: '#000',
-    shadowOpacity: 0.1,
-    shadowRadius: 5,
-    elevation: 2,
-  },
-  postHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 10,
-  },
-  userImage: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    marginRight: 10,
-  },
-  username: {
-    fontWeight: 'bold',
-    fontSize: 16,
-  },
-  postContent: {
-    marginBottom: 10,
-    fontSize: 14,
-  },
-  postImage: {
-    width: '100%',
-    height: 200,
-    borderRadius: 10,
   },
   commentsList: {
     paddingBottom: 60,

@@ -32,6 +32,6 @@
     "web": {
       "favicon": "./assets/favicon.png"
     },
-    "sdkVersion": "52.0.0"
+    "newArchEnabled": true
   }
 }
