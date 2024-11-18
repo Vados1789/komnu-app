@@ -47,7 +47,7 @@ export default function GroupContentScreen({ route }) {
     return (
         <View style={styles.container}>
             <CreatePostForm groupId={groupId} userId={user.userId} onPostCreated={handlePostCreated} />
-            <GroupsPostList posts={posts} onReply={() => {}} onDelete={handleDeletePost} />
+            <GroupsPostList posts={posts} onDelete={handleDeletePost} />
         </View>
     );
 }

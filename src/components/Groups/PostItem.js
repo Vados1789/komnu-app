@@ -1,6 +1,5 @@
 import React, { useContext, useState, useEffect } from 'react';
 import { View, Text, Image, StyleSheet, TouchableOpacity, Alert } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
 import axios from 'axios';
 import API_BASE_URL from '../../config/apiConfig';
 import IMAGE_BASE_URL from '../../config/imageConfig.js';
@@ -10,8 +9,6 @@ import usePostSignalR from '../../hooks/usePostSignalR';
 
 export default function PostItem({ post, onDelete, onNewPost }) {
   const { user } = useContext(AuthContext);
-  const navigation = useNavigation();
-  const [commentCount, setCommentCount] = useState(0);
   const [likeCount, setLikeCount] = useState(post.likeCount || 0);
   const [dislikeCount, setDislikeCount] = useState(post.dislikeCount || 0);
   const [userReaction, setUserReaction] = useState(null);
@@ -33,16 +30,6 @@ export default function PostItem({ post, onDelete, onNewPost }) {
   usePostSignalR(handleReactionUpdate, handleNewPost);
 
   useEffect(() => {
-    const fetchCommentCount = async () => {
-      try {
-        const response = await axios.get(`${API_BASE_URL}GroupPostComments/${post.postId}/count`);
-        console.log(`Fetched comment count for post ${post.postId}:`, response.data);
-        setCommentCount(response.data || 0);
-      } catch (error) {
-        console.error(`Error fetching comment count for post ${post.postId}:`, error);
-      }
-    };
-
     const fetchReactionData = async () => {
       try {
         const reactionsResponse = await axios.get(`${API_BASE_URL}GroupPostReactions/post/${post.postId}`);
@@ -58,8 +45,7 @@ export default function PostItem({ post, onDelete, onNewPost }) {
       }
     };
 
-    console.log(`Fetching initial comment and reaction data for post: ${post.postId}`);
-    fetchCommentCount();
+    console.log(`Fetching initial reaction data for post: ${post.postId}`);
     fetchReactionData();
   }, [post.postId, user.userId]);
 
@@ -103,10 +89,6 @@ export default function PostItem({ post, onDelete, onNewPost }) {
     ]);
   };
 
-  const handleCommentPress = () => {
-    navigation.navigate('GroupCommentsScreen', { postId: post.postId, post });
-  };
-
   console.log(`Rendering PostItem for post ${post.postId}`);
   console.log(`Like Count: ${likeCount}, Dislike Count: ${dislikeCount}, User Reaction: ${userReaction}`);
 
@@ -123,7 +105,7 @@ export default function PostItem({ post, onDelete, onNewPost }) {
       </View>
       <Text style={styles.content}>{post.content || 'No content available'}</Text>
       {post.imagePath ? (
-        <TouchableOpacity onPress={() => navigation.navigate('FullScreenImageScreen', { imageUri: `${IMAGE_BASE_URL}${post.imagePath}` })}>
+        <TouchableOpacity onPress={() => console.log('Navigate to full-screen image view')}>
           <Image source={{ uri: `${IMAGE_BASE_URL}${post.imagePath}` }} style={styles.postImage} />
         </TouchableOpacity>
       ) : null}
@@ -131,7 +113,6 @@ export default function PostItem({ post, onDelete, onNewPost }) {
 
       {/* Action Buttons */}
       <View style={styles.actionButtons}>
-        {/* Reactions on the left */}
         <View style={styles.leftButtons}>
           <TouchableOpacity onPress={() => handleReaction('like')} style={styles.reactionButton}>
             <FontAwesome name={userReaction === 'like' ? 'thumbs-up' : 'thumbs-o-up'} size={20} color="blue" />
@@ -143,7 +124,6 @@ export default function PostItem({ post, onDelete, onNewPost }) {
           </TouchableOpacity>
         </View>
 
-        {/* Edit and Delete on the right */}
         {user?.userId === post.userId && (
           <View style={styles.rightButtons}>
             <TouchableOpacity style={styles.deleteButton} onPress={handleDeletePress}>
@@ -152,11 +132,6 @@ export default function PostItem({ post, onDelete, onNewPost }) {
           </View>
         )}
       </View>
-
-      {/* Comments Button */}
-      <TouchableOpacity style={styles.commentButton} onPress={handleCommentPress}>
-        <Text style={styles.commentButtonText}>Comments ({commentCount})</Text>
-      </TouchableOpacity>
     </View>
   );
 }
@@ -227,15 +202,5 @@ const styles = StyleSheet.create({
   deleteButtonText: {
     color: '#fff',
     fontWeight: 'bold',
-  },
-  commentButton: {
-    marginTop: 10,
-    padding: 8,
-    backgroundColor: '#f0f0f0',
-    borderRadius: 5,
-    alignItems: 'center',
-  },
-  commentButtonText: {
-    color: '#007BFF',
   },
 });
