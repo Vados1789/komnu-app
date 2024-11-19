@@ -2,6 +2,7 @@ import React, { useEffect, useState, useContext } from 'react';
 import { View, Text, FlatList, StyleSheet, Image, TouchableOpacity, Alert } from 'react-native';
 import axios from 'axios';
 import { AuthContext } from '../../context/AuthContext';
+import { saveToCache, loadFromCache } from '../../cache/cacheManager';
 import API_BASE_URL from '../../config/apiConfig.js';
 import IMAGE_BASE_URL from '../../config/imageConfig.js';
 
@@ -10,6 +11,23 @@ export default function FriendsListComponent({ searchText }) {
   const [friends, setFriends] = useState([]);
   const [filteredFriends, setFilteredFriends] = useState([]);
 
+  const CACHE_KEY = `friends_${user?.userId}_list`;
+
+  // Load cached data when the component mounts
+  useEffect(() => {
+    const loadCachedData = async () => {
+      const cachedData = await loadFromCache(CACHE_KEY);
+      if (cachedData) {
+        console.log("Loaded friends from cache:", cachedData);
+        setFriends(cachedData);
+        setFilteredFriends(cachedData);
+      }
+    };
+
+    loadCachedData();
+  }, [CACHE_KEY]);
+
+  // Fetch friends from the server
   useEffect(() => {
     const fetchFriends = async () => {
       if (user && user.userId) {
@@ -17,15 +35,28 @@ export default function FriendsListComponent({ searchText }) {
           const response = await axios.get(`${API_BASE_URL}Friends/list/${user.userId}`);
           console.log("Friends data received:", response.data);
           setFriends(response.data);
-          setFilteredFriends(response.data); // Initialize filtered list
+          setFilteredFriends(response.data);
+
+          // Save the fetched data to cache
+          await saveToCache(CACHE_KEY, response.data);
         } catch (error) {
           console.error("Error fetching friends list:", error);
+
+          // If fetching fails, load from cache
+          const cachedData = await loadFromCache(CACHE_KEY);
+          if (cachedData) {
+            console.log("Loaded friends from cache due to network error.");
+            setFriends(cachedData);
+            setFilteredFriends(cachedData);
+          } else {
+            Alert.alert("Error", "Unable to load friends. Please check your internet connection.");
+          }
         }
       }
     };
 
     fetchFriends();
-  }, [user]);
+  }, [user, CACHE_KEY]);
 
   // Update filtered friends whenever searchText changes
   useEffect(() => {
@@ -43,10 +74,15 @@ export default function FriendsListComponent({ searchText }) {
   const handleRemoveFriend = async (friendId) => {
     try {
       await axios.post(`${API_BASE_URL}Friends/remove`, { friendId });
+      
       // Update friends and filteredFriends after successful removal
       const updatedFriends = friends.filter(friend => friend.friendId !== friendId);
       setFriends(updatedFriends);
       setFilteredFriends(updatedFriends);
+
+      // Update the cache after removal
+      await saveToCache(CACHE_KEY, updatedFriends);
+
       Alert.alert("Success", "Friend removed successfully.");
     } catch (error) {
       console.error("Error removing friend:", error);
