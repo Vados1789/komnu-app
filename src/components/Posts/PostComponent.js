@@ -2,6 +2,7 @@ import React, { useContext, useState, useEffect } from 'react';
 import { View, Text, Image, StyleSheet, TouchableOpacity, Alert } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import axios from 'axios';
+import { saveToCache, loadFromCache } from '../../cache/cacheManager.js';
 import API_BASE_URL from '../../config/apiConfig';
 import IMAGE_BASE_URL from '../../config/imageConfig.js';
 import { AuthContext } from '../../context/AuthContext';
@@ -12,62 +13,100 @@ export default function PostComponent({ post, onDelete, onNewPost }) {
   const { user } = useContext(AuthContext);
   const navigation = useNavigation();
   const [commentCount, setCommentCount] = useState(0);
-  const [likeCount, setLikeCount] = useState(post.likeCount || 0);
-  const [dislikeCount, setDislikeCount] = useState(post.dislikeCount || 0);
+  const [likeCount, setLikeCount] = useState(0);
+  const [dislikeCount, setDislikeCount] = useState(0);
   const [userReaction, setUserReaction] = useState(null);
 
-  // Handle real-time reaction updates
+  const CACHE_KEY = `post_${post.postId}_data`;
+
+  // Load cached data when the component mounts
+  useEffect(() => {
+    const loadCachedData = async () => {
+      const cachedData = await loadFromCache(CACHE_KEY);
+      if (cachedData) {
+        setCommentCount(cachedData.commentCount || 0);
+        setLikeCount(cachedData.likeCount || 0);
+        setDislikeCount(cachedData.dislikeCount || 0);
+        setUserReaction(cachedData.userReaction || null);
+      }
+    };
+    loadCachedData();
+  }, [CACHE_KEY]);
+
+  // Save updated data to cache
+  const saveToCacheData = async (data) => {
+    const cacheData = {
+      commentCount: data?.commentCount ?? commentCount,
+      likeCount: data?.likeCount ?? likeCount,
+      dislikeCount: data?.dislikeCount ?? dislikeCount,
+      userReaction: data?.userReaction ?? userReaction,
+    };
+    await saveToCache(CACHE_KEY, cacheData);
+  };
+
+  // Fetch counts and reactions
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const commentResponse = await axios.get(`${API_BASE_URL}comments/${post.postId}/count`);
+        const reactionCountsResponse = await axios.get(`${API_BASE_URL}post-reactions/${post.postId}`);
+        const userReactionResponse = await axios.get(`${API_BASE_URL}post-reactions/${post.postId}/user/${user.userId}`);
+
+        const commentCount = commentResponse.data || 0;
+        const likeCount = reactionCountsResponse.data.likeCount || 0;
+        const dislikeCount = reactionCountsResponse.data.dislikeCount || 0;
+        const userReaction = userReactionResponse.data.reactionType || null;
+
+        setCommentCount(commentCount);
+        setLikeCount(likeCount);
+        setDislikeCount(dislikeCount);
+        setUserReaction(userReaction);
+
+        saveToCacheData({ commentCount, likeCount, dislikeCount, userReaction });
+      } catch (error) {
+        console.error('Error fetching post data:', error);
+      }
+    };
+
+    fetchData();
+  }, [post.postId, user.userId]);
+
+  // Handle real-time updates
   const handleReactionUpdate = (update) => {
     if (update.postId === post.postId) {
       setLikeCount(update.likeCount);
       setDislikeCount(update.dislikeCount);
+      saveToCacheData({
+        likeCount: update.likeCount,
+        dislikeCount: update.dislikeCount,
+      });
     }
   };
 
-  // Handle new post notifications
   const handleNewPost = (newPost) => {
     onNewPost(newPost);
   };
 
   usePostSignalR(handleReactionUpdate, handleNewPost);
 
-  useEffect(() => {
-    const fetchCommentCount = async () => {
-      try {
-        const response = await axios.get(`${API_BASE_URL}comments/${post.postId}/count`);
-        setCommentCount(response.data);
-      } catch (error) {
-        console.error('Error fetching comment count:', error);
-      }
-    };
-    fetchCommentCount();
-
-    const fetchReactionData = async () => {
-      try {
-        const countsResponse = await axios.get(`${API_BASE_URL}post-reactions/${post.postId}`);
-        setLikeCount(countsResponse.data.likeCount);
-        setDislikeCount(countsResponse.data.dislikeCount);
-
-        const userReactionResponse = await axios.get(`${API_BASE_URL}post-reactions/${post.postId}/user/${user.userId}`);
-        setUserReaction(userReactionResponse.data.reactionType);
-      } catch (error) {
-        console.error('Error fetching reactions:', error);
-      }
-    };
-    fetchReactionData();
-  }, [post.postId, user.userId]);
-
   const handleLikePress = async () => {
     try {
-      const newReaction = userReaction === 'like' ? null : 'like'; // Toggle like
+      const newReaction = userReaction === 'like' ? null : 'like';
       const response = await axios.post(`${API_BASE_URL}post-reactions`, {
         postId: post.postId,
         userId: user.userId,
         reactionType: newReaction,
       });
+
       setUserReaction(newReaction);
       setLikeCount(response.data.likeCount);
       setDislikeCount(response.data.dislikeCount);
+
+      saveToCacheData({
+        likeCount: response.data.likeCount,
+        dislikeCount: response.data.dislikeCount,
+        userReaction: newReaction,
+      });
     } catch (error) {
       console.error('Error liking post:', error);
     }
@@ -75,15 +114,22 @@ export default function PostComponent({ post, onDelete, onNewPost }) {
 
   const handleDislikePress = async () => {
     try {
-      const newReaction = userReaction === 'dislike' ? null : 'dislike'; // Toggle dislike
+      const newReaction = userReaction === 'dislike' ? null : 'dislike';
       const response = await axios.post(`${API_BASE_URL}post-reactions`, {
         postId: post.postId,
         userId: user.userId,
         reactionType: newReaction,
       });
+
       setUserReaction(newReaction);
       setLikeCount(response.data.likeCount);
       setDislikeCount(response.data.dislikeCount);
+
+      saveToCacheData({
+        likeCount: response.data.likeCount,
+        dislikeCount: response.data.dislikeCount,
+        userReaction: newReaction,
+      });
     } catch (error) {
       console.error('Error disliking post:', error);
     }
@@ -136,7 +182,6 @@ export default function PostComponent({ post, onDelete, onNewPost }) {
 
       {/* Action Buttons */}
       <View style={styles.actionButtons}>
-        {/* Reactions on the left */}
         <View style={styles.leftButtons}>
           <TouchableOpacity onPress={handleLikePress} style={styles.reactionButton}>
             <FontAwesome name={userReaction === 'like' ? 'thumbs-up' : 'thumbs-o-up'} size={20} color="blue" />
@@ -160,8 +205,6 @@ export default function PostComponent({ post, onDelete, onNewPost }) {
           </View>
         )}
       </View>
-
-      {/* Comments Button */}
       <TouchableOpacity style={styles.commentButton} onPress={() => navigation.navigate('CommentsScreen', { postId: post.postId })}>
         <Text style={styles.commentButtonText}>Comments ({commentCount})</Text>
       </TouchableOpacity>
