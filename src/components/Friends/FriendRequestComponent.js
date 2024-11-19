@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useContext } from 'react';
 import { View, Text, FlatList, StyleSheet, Image, TouchableOpacity, Alert } from 'react-native';
 import axios from 'axios';
+import { saveToCache, loadFromCache } from '../../cache/cacheManager.js';
 import { AuthContext } from '../../context/AuthContext';
 import API_BASE_URL from '../../config/apiConfig.js';
 import IMAGE_BASE_URL from '../../config/imageConfig.js';
@@ -10,21 +11,34 @@ export default function FriendRequestComponent({ searchText }) {
   const [friendRequests, setFriendRequests] = useState([]);
   const [filteredRequests, setFilteredRequests] = useState([]);
 
+  const CACHE_KEY = `friend_requests_${user?.userId}`;
+
   useEffect(() => {
+    const loadCachedRequests = async () => {
+      const cachedData = await loadFromCache(CACHE_KEY);
+      if (cachedData) {
+        setFriendRequests(cachedData);
+        setFilteredRequests(cachedData);
+      }
+    };
+
     const fetchFriendRequests = async () => {
       if (user && user.userId) {
         try {
           const response = await axios.get(`${API_BASE_URL}Friends/requests/${user.userId}`);
           setFriendRequests(response.data);
           setFilteredRequests(response.data);
+          await saveToCache(CACHE_KEY, response.data); // Save to cache
         } catch (error) {
           console.error("Error fetching friend requests:", error);
+          // Load from cache if online fetch fails
+          loadCachedRequests();
         }
       }
     };
 
     fetchFriendRequests();
-  }, [user]);
+  }, [user, CACHE_KEY]);
 
   useEffect(() => {
     if (searchText.trim() === '') {
@@ -47,7 +61,10 @@ export default function FriendRequestComponent({ searchText }) {
         { headers: { 'Content-Type': 'application/json' } }
       );
       Alert.alert("Success", "Friend request accepted.");
-      setFriendRequests(friendRequests.filter(request => request.friendId !== friendId));
+      const updatedRequests = friendRequests.filter(request => request.friendId !== friendId);
+      setFriendRequests(updatedRequests);
+      setFilteredRequests(updatedRequests);
+      await saveToCache(CACHE_KEY, updatedRequests); // Update cache
     } catch (error) {
       console.error("Error accepting friend request:", error);
       Alert.alert("Error", "Unable to accept friend request.");
@@ -62,7 +79,10 @@ export default function FriendRequestComponent({ searchText }) {
         { headers: { 'Content-Type': 'application/json' } }
       );
       Alert.alert("Success", "Friend request rejected.");
-      setFriendRequests(friendRequests.filter(request => request.friendId !== friendId));
+      const updatedRequests = friendRequests.filter(request => request.friendId !== friendId);
+      setFriendRequests(updatedRequests);
+      setFilteredRequests(updatedRequests);
+      await saveToCache(CACHE_KEY, updatedRequests); // Update cache
     } catch (error) {
       console.error("Error rejecting friend request:", error);
       Alert.alert("Error", "Unable to reject friend request.");
@@ -138,10 +158,5 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 14,
     fontWeight: '600',
-  },
-  errorText: {
-    color: 'red',
-    textAlign: 'center',
-    marginTop: 20,
   },
 });
