@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useContext } from 'react';
 import { View, Text, FlatList, StyleSheet, TouchableOpacity, Image, Alert } from 'react-native';
 import axios from 'axios';
+import { saveToCache, loadFromCache } from '../../cache/cacheManager.js';
 import { AuthContext } from '../../context/AuthContext';
 import API_BASE_URL from '../../config/apiConfig.js';
 import IMAGE_BASE_URL from '../../config/imageConfig.js';
@@ -10,24 +11,36 @@ export default function AllGroupsComponent({ searchText }) {
   const [allGroups, setAllGroups] = useState([]);
   const [filteredGroups, setFilteredGroups] = useState([]);
 
+  const CACHE_KEY = `all_groups_${user?.userId}`; // Cache key for storing group data
   const defaultImageUri = 'https://upload.wikimedia.org/wikipedia/commons/8/89/Portrait_Placeholder.png';
 
-  // Fetch all groups on mount
   useEffect(() => {
+    const loadCachedGroups = async () => {
+      const cachedData = await loadFromCache(CACHE_KEY);
+      if (cachedData) {
+        setAllGroups(cachedData);
+        setFilteredGroups(cachedData);
+      }
+    };
+
     const fetchAllGroups = async () => {
       try {
         const response = await axios.get(`${API_BASE_URL}Groups`);
         const groups = response.data.$values || response.data; // Handle multiple formats from backend
         setAllGroups(groups);
-        setFilteredGroups(groups); // Initialize filtered groups
+        setFilteredGroups(groups);
+        await saveToCache(CACHE_KEY, groups); // Save groups to cache
       } catch (error) {
         console.error('Error fetching all groups:', error);
-        Alert.alert('Error', 'Unable to fetch groups.');
+        // Load cached data if fetch fails
+        await loadCachedGroups();
       }
     };
 
-    fetchAllGroups();
-  }, []);
+    if (user) {
+      fetchAllGroups();
+    }
+  }, [user, CACHE_KEY]);
 
   // Filter groups by search text
   useEffect(() => {
@@ -42,18 +55,14 @@ export default function AllGroupsComponent({ searchText }) {
     }
   }, [searchText, allGroups]);
 
-  // Join a group
   const handleJoinGroup = async (groupId) => {
-    console.log('Attempting to join group:', groupId);
-    console.log('Trying to join with user:', user.userId);
     try {
       const response = await axios.post(
         `${API_BASE_URL}Groups/join/${groupId}`,
         user.userId,
         { headers: { 'Content-Type': 'application/json' } }
       );
-  
-      // Update group status immediately
+
       setAllGroups((prevGroups) =>
         prevGroups.map((group) =>
           group.groupId === groupId
@@ -61,26 +70,28 @@ export default function AllGroupsComponent({ searchText }) {
             : group
         )
       );
+
+      // Update cache
+      const updatedGroups = allGroups.map((group) =>
+        group.groupId === groupId
+          ? { ...group, members: [...group.members, { userId: user.userId }] }
+          : group
+      );
+      await saveToCache(CACHE_KEY, updatedGroups);
     } catch (error) {
       console.error('Error joining group:', error);
-      const errorMessage =
-        typeof error.response?.data === 'string'
-          ? error.response?.data
-          : 'Unable to join the group.';
-      Alert.alert('Error', errorMessage);
+      Alert.alert('Error', 'Unable to join the group.');
     }
   };
 
-  // Leave a group
   const handleLeaveGroup = async (groupId) => {
     try {
       const response = await axios.post(
         `${API_BASE_URL}Groups/leave/${groupId}`,
-        user.userId, // Pass the userId directly as the body
-        { headers: { 'Content-Type': 'application/json' } } // Ensure correct headers
+        user.userId,
+        { headers: { 'Content-Type': 'application/json' } }
       );
-  
-      // Update group status immediately
+
       setAllGroups((prevGroups) =>
         prevGroups.map((group) =>
           group.groupId === groupId
@@ -88,20 +99,20 @@ export default function AllGroupsComponent({ searchText }) {
             : group
         )
       );
+
+      // Update cache
+      const updatedGroups = allGroups.map((group) =>
+        group.groupId === groupId
+          ? { ...group, members: group.members.filter((m) => m.userId !== user.userId) }
+          : group
+      );
+      await saveToCache(CACHE_KEY, updatedGroups);
     } catch (error) {
       console.error('Error leaving group:', error);
-  
-      // Extract and display a detailed error message if available
-      const errorMessage =
-        error.response?.data?.errors?.$?.[0] ||
-        error.response?.data ||
-        'Unable to leave the group.';
-  
-      Alert.alert('Error', errorMessage);
+      Alert.alert('Error', 'Unable to leave the group.');
     }
   };
 
-  // Check if the current user is a member of the group
   const isUserMember = (group) => {
     return group.members.some((member) => member.userId === user.userId);
   };
@@ -118,7 +129,6 @@ export default function AllGroupsComponent({ searchText }) {
               uri: item.imageUrl ? `${IMAGE_BASE_URL}${item.imageUrl}` : defaultImageUri,
             }}
             style={styles.groupImage}
-            onError={() => (item.imageUrl = defaultImageUri)}
           />
           <Text style={styles.groupName}>{item.groupName}</Text>
           {isUserMember(item) ? (
@@ -172,7 +182,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   leaveButton: {
-    backgroundColor: '#ff4d4d', // Red color for Leave Group button
+    backgroundColor: '#ff4d4d',
   },
   leaveButtonText: {
     color: '#fff',
