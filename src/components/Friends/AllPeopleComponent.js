@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useContext } from 'react';
 import { View, Text, FlatList, StyleSheet, Image, TouchableOpacity, Alert } from 'react-native';
 import axios from 'axios';
+import { saveToCache, loadFromCache } from '../../cache/cacheManager.js';
 import API_BASE_URL from '../../config/apiConfig.js';
 import IMAGE_BASE_URL from '../../config/imageConfig.js';
 import { AuthContext } from '../../context/AuthContext';
@@ -11,31 +12,44 @@ export default function AllPeopleComponent({ searchText }) {
     const [filteredPeople, setFilteredPeople] = useState([]);
     const [sentRequests, setSentRequests] = useState(new Set());
 
+    const CACHE_KEY = `all_people_${user?.userId}`;
+
     useEffect(() => {
+        const loadCachedPeople = async () => {
+            const cachedData = await loadFromCache(CACHE_KEY);
+            if (cachedData) {
+                setPeople(cachedData);
+                setFilteredPeople(cachedData);
+            }
+        };
+
         const fetchAllPeopleWithStatus = async () => {
-        try {
-            const response = await axios.get(`${API_BASE_URL}Friends/all-with-status/${user.userId}`);
-            setPeople(response.data);
-            setFilteredPeople(response.data); // Initialize filtered people
-        } catch (error) {
-            console.error("Error fetching people with status:", error);
-        }
+            try {
+                const response = await axios.get(`${API_BASE_URL}Friends/all-with-status/${user.userId}`);
+                setPeople(response.data);
+                setFilteredPeople(response.data);
+                await saveToCache(CACHE_KEY, response.data); // Save to cache
+            } catch (error) {
+                console.error("Error fetching people with status:", error);
+                // Load cached data if the fetch fails
+                await loadCachedPeople();
+            }
         };
 
         if (user) {
             fetchAllPeopleWithStatus();
         }
-    }, [user]);
+    }, [user, CACHE_KEY]);
 
     useEffect(() => {
         if (searchText.trim() === '') {
             setFilteredPeople(people);
         } else {
-        setFilteredPeople(
-            people.filter(person =>
-                person.username.toLowerCase().includes(searchText.toLowerCase())
-            )
-        );
+            setFilteredPeople(
+                people.filter(person =>
+                    person.username.toLowerCase().includes(searchText.toLowerCase())
+                )
+            );
         }
     }, [searchText, people]);
 
@@ -56,16 +70,12 @@ export default function AllPeopleComponent({ searchText }) {
     const handleRemoveFriend = async (friendId) => {
         try {
             await axios.post(`${API_BASE_URL}Friends/remove`, { FriendId: friendId });
-            setPeople(prevPeople =>
-                prevPeople.map(person =>
-                    person.friendId === friendId ? { ...person, friendStatus: "None", friendId: null } : person
-                )
+            const updatedPeople = people.map(person =>
+                person.friendId === friendId ? { ...person, friendStatus: "None", friendId: null } : person
             );
-            setFilteredPeople(prevPeople =>
-                prevPeople.map(person =>
-                    person.friendId === friendId ? { ...person, friendStatus: "None", friendId: null } : person
-                )
-            );
+            setPeople(updatedPeople);
+            setFilteredPeople(updatedPeople);
+            await saveToCache(CACHE_KEY, updatedPeople); // Update cache
             Alert.alert("Success", "Friend removed successfully.");
         } catch (error) {
             console.error("Error removing friend:", error.response?.data || error.message);
@@ -79,44 +89,44 @@ export default function AllPeopleComponent({ searchText }) {
                 data={filteredPeople}
                 keyExtractor={(item) => item.userId.toString()}
                 renderItem={({ item }) => (
-                <View style={styles.personContainer}>
-                    <Image
-                    source={{
-                        uri: item.profilePicture
-                        ? `${IMAGE_BASE_URL}${item.profilePicture}`
-                        : 'https://via.placeholder.com/50',
-                    }}
-                    style={styles.profileImage}
-                    />
-                    <View style={styles.textContainer}>
-                        <Text style={styles.usernameText}>{item.username || 'Unknown User'}</Text>
-                        <Text style={styles.statusText}>
-                            {item.friendStatus === "Pending" ? "Request Sent" : item.friendStatus === "Accepted" ? "Friend" : ""}
-                        </Text>
+                    <View style={styles.personContainer}>
+                        <Image
+                            source={{
+                                uri: item.profilePicture
+                                    ? `${IMAGE_BASE_URL}${item.profilePicture}`
+                                    : 'https://via.placeholder.com/50',
+                            }}
+                            style={styles.profileImage}
+                        />
+                        <View style={styles.textContainer}>
+                            <Text style={styles.usernameText}>{item.username || 'Unknown User'}</Text>
+                            <Text style={styles.statusText}>
+                                {item.friendStatus === "Pending" ? "Request Sent" : item.friendStatus === "Accepted" ? "Friend" : ""}
+                            </Text>
+                        </View>
+                        {item.friendStatus === "None" ? (
+                            <TouchableOpacity
+                                style={[styles.addButton, sentRequests.has(item.userId) && styles.requestSentButton]}
+                                onPress={() => handleSendRequest(item.userId)}
+                                disabled={sentRequests.has(item.userId)}
+                            >
+                                <Text style={styles.addButtonText}>
+                                    {sentRequests.has(item.userId) ? "Request Sent" : "Add Friend"}
+                                </Text>
+                            </TouchableOpacity>
+                        ) : item.friendStatus === "Pending" ? (
+                            <View style={styles.pendingLabel}>
+                                <Text style={styles.pendingText}>Pending</Text>
+                            </View>
+                        ) : (
+                            <TouchableOpacity
+                                style={styles.removeButton}
+                                onPress={() => handleRemoveFriend(item.friendId)}
+                            >
+                                <Text style={styles.removeButtonText}>Remove</Text>
+                            </TouchableOpacity>
+                        )}
                     </View>
-                    {item.friendStatus === "None" ? (
-                    <TouchableOpacity
-                        style={[styles.addButton, sentRequests.has(item.userId) && styles.requestSentButton]}
-                        onPress={() => handleSendRequest(item.userId)}
-                        disabled={sentRequests.has(item.userId)}
-                    >
-                        <Text style={styles.addButtonText}>
-                        {sentRequests.has(item.userId) ? "Request Sent" : "Add Friend"}
-                        </Text>
-                    </TouchableOpacity>
-                    ) : item.friendStatus === "Pending" ? (
-                    <View style={styles.pendingLabel}>
-                        <Text style={styles.pendingText}>Pending</Text>
-                    </View>
-                    ) : (
-                    <TouchableOpacity
-                        style={styles.removeButton}
-                        onPress={() => handleRemoveFriend(item.friendId)}
-                    >
-                        <Text style={styles.removeButtonText}>Remove</Text>
-                    </TouchableOpacity>
-                    )}
-                </View>
                 )}
             />
         </View>
