@@ -1,9 +1,10 @@
 import React, { useEffect, useState, useContext } from 'react';
 import { View, Text, FlatList, StyleSheet, TouchableOpacity, Image, Alert } from 'react-native';
 import axios from 'axios';
+import { saveToCache, loadFromCache } from '../../cache/cacheManager.js';
 import { AuthContext } from '../../context/AuthContext';
 import API_BASE_URL from '../../config/apiConfig.js';
-import IMAGE_BASE_URL from '../../config/imageConfig.js'; // Import IMAGE_BASE_URL here
+import IMAGE_BASE_URL from '../../config/imageConfig.js';
 import { useNavigation } from '@react-navigation/native';
 
 export default function MyGroupsComponent({ searchText }) {
@@ -12,29 +13,39 @@ export default function MyGroupsComponent({ searchText }) {
     const [myGroups, setMyGroups] = useState([]);
     const [filteredGroups, setFilteredGroups] = useState([]);
 
+    const CACHE_KEY = `my_groups_${user?.userId}`; // Unique cache key for user's groups
     const defaultImageUri = 'https://example.com/default-image.png'; // Replace with actual default image URL
 
     useEffect(() => {
+        const loadCachedGroups = async () => {
+            const cachedData = await loadFromCache(CACHE_KEY);
+            if (cachedData) {
+                setMyGroups(cachedData);
+                setFilteredGroups(cachedData);
+            }
+        };
+
         const fetchMyGroups = async () => {
             if (user && user.userId) {
                 try {
                     const response = await axios.get(`${API_BASE_URL}GroupMember/my-groups/${user.userId}`);
-                    const groupsData = response.data?.$values || response.data || []; 
+                    const groupsData = response.data?.$values || response.data || [];
                     setMyGroups(groupsData);
                     setFilteredGroups(groupsData);
+                    await saveToCache(CACHE_KEY, groupsData); // Save groups to cache
                 } catch (error) {
                     if (error.response && error.response.status === 404) {
                         setMyGroups([]);
                         setFilteredGroups([]);
-                    } else {
-                        console.error('Error fetching my groups:', error);
-                        Alert.alert('Error', 'Unable to fetch your groups.');
                     }
+                    // Load cached data if fetch fails
+                    await loadCachedGroups();
                 }
             }
         };
+
         fetchMyGroups();
-    }, [user]);
+    }, [user, CACHE_KEY]);
 
     useEffect(() => {
         if (searchText.trim() === '') {
@@ -54,6 +65,7 @@ export default function MyGroupsComponent({ searchText }) {
             const updatedGroups = myGroups.filter((group) => group.groupId !== groupId);
             setMyGroups(updatedGroups);
             setFilteredGroups(updatedGroups);
+            await saveToCache(CACHE_KEY, updatedGroups); // Update cache after leaving group
             Alert.alert('Success', 'You have left the group.');
         } catch (error) {
             console.error('Error leaving group:', error);
@@ -72,12 +84,11 @@ export default function MyGroupsComponent({ searchText }) {
             ListEmptyComponent={<Text>No groups available.</Text>}
             renderItem={({ item }) => (
                 <TouchableOpacity style={styles.groupContainer} onPress={() => handleOpenGroup(item.groupId)}>
-                    <Image 
-                        source={{ 
+                    <Image
+                        source={{
                             uri: item.imageUrl ? `${IMAGE_BASE_URL}${item.imageUrl}` : defaultImageUri
                         }}
-                        style={styles.groupImage} 
-                        onError={() => (item.imageUrl = defaultImageUri)}
+                        style={styles.groupImage}
                     />
                     <Text style={styles.groupName}>{item.groupName}</Text>
                     <TouchableOpacity
