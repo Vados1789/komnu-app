@@ -1,5 +1,5 @@
 import React, { useContext, useLayoutEffect } from 'react';
-import { View, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, TouchableOpacity, StyleSheet, Text } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import ProfilePictureComponent from '../../components/Profile/ProfilePictureComponent';
 import ProfileInfoComponent from '../../components/Profile/ProfileInfoComponent';
@@ -18,6 +18,14 @@ const ProfileScreen = ({ navigation }) => {
     });
   }, [navigation]);
 
+  if (!user) {
+    return (
+      <View style={styles.container}>
+        <Text style={styles.loadingText}>Loading user data...</Text>
+      </View>
+    );
+  }
+
   return (
     <View style={styles.container}>
       <ProfilePictureComponent editable={false} />
@@ -32,6 +40,11 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     padding: 20,
+    backgroundColor: '#fff',
+  },
+  loadingText: {
+    fontSize: 18,
+    color: '#777',
   },
 });
 

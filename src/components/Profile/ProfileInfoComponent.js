@@ -2,7 +2,6 @@ import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 
-// Centralized style properties
 const ICON_SIZE = 20;
 const PRIMARY_COLOR = "#007bff";
 const BACKGROUND_COLOR = "#f9f9f9";
