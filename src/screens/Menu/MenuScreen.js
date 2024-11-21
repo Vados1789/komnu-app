@@ -31,11 +31,6 @@ export default function MenuScreen() {
   return (
     <View style={styles.container}>
       <View style={styles.menuContainer}>
-        <TouchableOpacity style={styles.menuItem}>
-          <Ionicons name="settings-outline" size={24} color="black" style={styles.icon} />
-          <Text style={styles.menuText}>Settings</Text>
-          <Ionicons name="chevron-forward-outline" size={20} color="gray" style={styles.arrow} />
-        </TouchableOpacity>
         <TouchableOpacity
           style={styles.menuItem}
           onPress={() => navigation.navigate('ContactSupport')}
@@ -44,21 +39,22 @@ export default function MenuScreen() {
           <Text style={styles.menuText}>Contact Support</Text>
           <Ionicons name="chevron-forward-outline" size={20} color="gray" style={styles.arrow} />
         </TouchableOpacity>
-        <TouchableOpacity style={styles.menuItem}>
-          <Ionicons name="bug-outline" size={24} color="black" style={styles.icon} />
-          <Text style={styles.menuText}>Report a Bug</Text>
-          <Ionicons name="chevron-forward-outline" size={20} color="gray" style={styles.arrow} />
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.menuItem}>
-          <Ionicons name="language-outline" size={24} color="black" style={styles.icon} />
-          <Text style={styles.menuText}>Change Language</Text>
-          <Ionicons name="chevron-forward-outline" size={20} color="gray" style={styles.arrow} />
-        </TouchableOpacity>
         <TouchableOpacity style={styles.menuItem} onPress={handleLogout}>
           <Ionicons name="log-out-outline" size={24} color="black" style={styles.icon} />
           <Text style={styles.menuText}>Logout</Text>
           <Ionicons name="chevron-forward-outline" size={20} color="gray" style={styles.arrow} />
         </TouchableOpacity>
+      </View>
+
+      {/* Footer */}
+      <View style={styles.footer}>
+        <Text style={styles.footerText}>
+          This is project Kom Nu made by students from Aarhus Tech
+        </Text>
+        <Text style={styles.footerText}>
+          Tobias Jespersen and Vladyslav Sliusarskyi
+        </Text>
+        <Text style={styles.footerText}>Version 1.0</Text>
       </View>
     </View>
   );
@@ -69,6 +65,7 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 20,
     backgroundColor: '#fff',
+    justifyContent: 'space-between', // Ensures footer is at the bottom
   },
   menuContainer: {
     marginTop: 20,
@@ -90,5 +87,14 @@ const styles = StyleSheet.create({
   },
   arrow: {
     marginLeft: 'auto',
+  },
+  footer: {
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  footerText: {
+    fontSize: 14,
+    color: '#888',
+    textAlign: 'center',
   },
 });
