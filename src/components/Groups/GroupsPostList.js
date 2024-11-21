@@ -2,7 +2,7 @@ import React from 'react';
 import { FlatList, View, StyleSheet, Text } from 'react-native';
 import PostItem from './PostItem';
 
-export default function GroupsPostList({ posts, onDelete }) {
+export default function GroupsPostList({ posts, onDelete, navigation }) {
     // Reverse the posts array to display the newest posts at the top
     const sortedPosts = [...posts].reverse();
 
@@ -11,7 +11,11 @@ export default function GroupsPostList({ posts, onDelete }) {
             data={sortedPosts}
             keyExtractor={(item, index) => (item.id ? item.id.toString() : index.toString())} // Use index as a fallback
             renderItem={({ item }) => (
-                <PostItem post={item} onDelete={onDelete} />
+                <PostItem
+                    post={item}
+                    navigation={navigation} // Pass navigation prop here
+                    onDelete={onDelete}
+                />
             )}
             ListEmptyComponent={<Text style={styles.emptyText}>No posts in group yet.</Text>}
             contentContainerStyle={styles.listContainer}

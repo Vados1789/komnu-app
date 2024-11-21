@@ -7,7 +7,7 @@ import { AuthContext } from '../../context/AuthContext';
 import { FontAwesome } from '@expo/vector-icons';
 import usePostSignalR from '../../hooks/usePostSignalR';
 
-export default function PostItem({ post, onDelete, onNewPost }) {
+export default function PostItem({ post, onDelete, onNewPost, navigation }) {
   const { user } = useContext(AuthContext);
   const [likeCount, setLikeCount] = useState(post.likeCount || 0);
   const [dislikeCount, setDislikeCount] = useState(post.dislikeCount || 0);
@@ -105,7 +105,9 @@ export default function PostItem({ post, onDelete, onNewPost }) {
       </View>
       <Text style={styles.content}>{post.content || 'No content available'}</Text>
       {post.imagePath ? (
-        <TouchableOpacity onPress={() => console.log('Navigate to full-screen image view')}>
+        <TouchableOpacity
+          onPress={() => navigation.navigate('FullPictureScreen', { imageUrl: `${IMAGE_BASE_URL}${post.imagePath}` })}
+        >
           <Image source={{ uri: `${IMAGE_BASE_URL}${post.imagePath}` }} style={styles.postImage} />
         </TouchableOpacity>
       ) : null}

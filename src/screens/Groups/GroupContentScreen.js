@@ -6,7 +6,7 @@ import { AuthContext } from '../../context/AuthContext';
 import CreatePostForm from '../../components/Groups/CreatePostForm';
 import GroupsPostList from '../../components/Groups/GroupsPostList';
 
-export default function GroupContentScreen({ route }) {
+export default function GroupContentScreen({ route, navigation }) {
     const { groupId } = route.params;
     const { user } = useContext(AuthContext);
     const [posts, setPosts] = useState([]);
@@ -52,7 +52,11 @@ export default function GroupContentScreen({ route }) {
     return (
         <View style={styles.container}>
             <CreatePostForm groupId={groupId} userId={user.userId} onPostCreated={handlePostCreated} />
-            <GroupsPostList posts={posts} onDelete={handleDeletePost} />
+            <GroupsPostList
+                posts={posts}
+                onDelete={handleDeletePost}
+                navigation={navigation} // Pass navigation here
+            />
         </View>
     );
 }

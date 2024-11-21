@@ -16,6 +16,7 @@ import GroupContentScreen from '../screens/Groups/GroupContentScreen';
 import EditProfileScreen from '../screens/Profile/EditProfileScreen';
 import ProfileScreen from '../screens/Profile/ProfileScreen';
 import GroupCommentsScreen from '../screens/Groups/GroupCommentsScreen';
+import FullPictureScreen from '../screens/Groups/FullPictureScreen';
 
 const Stack = createStackNavigator();
 
@@ -23,20 +24,13 @@ export default function MainNavigator() {
   return (
     <NavigationContainer>
       <Stack.Navigator initialRouteName="Login">
-        {/* Authentication Screens */}
         <Stack.Screen name="Login" component={LoginScreen} />
         <Stack.Screen name="Register" component={RegisterScreen} />
         <Stack.Screen name="LoginSettings" component={LoginSettingsScreen} />
         <Stack.Screen name="TwoFaVerification" component={TwoFaVerificationScreen} />
-
-        {/* Main Tabs */}
         <Stack.Screen name="MainTabs" component={MainTabNavigator} options={{ headerShown: false }} />
-
-        {/* Profile Screens */}
         <Stack.Screen name="ProfileScreen" component={ProfileScreen} options={{ title: 'Profile' }} />
         <Stack.Screen name="EditProfileScreen" component={EditProfileScreen} options={{ title: 'Edit Profile' }} />
-
-        {/* Other Screens */}
         <Stack.Screen name="ContactSupport" component={ContactSupportScreen} options={{ title: 'Contact Support' }} />
         <Stack.Screen name="CreatePostScreen" component={CreatePostScreen} options={{ title: 'Create Post' }} />
         <Stack.Screen name="EditPostScreen" component={EditPostScreen} options={{ title: 'Edit Post' }} />
@@ -45,6 +39,7 @@ export default function MainNavigator() {
         <Stack.Screen name="CreateGroupScreen" component={CreateGroupScreen} options={{ title: 'Create Group' }} />
         <Stack.Screen name="GroupContentScreen" component={GroupContentScreen} options={{ title: 'Group Content' }} />
         <Stack.Screen name="GroupCommentsScreen" component={GroupCommentsScreen} options={{ title: 'Group Comments' }} />
+        <Stack.Screen name="FullPictureScreen" component={FullPictureScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );
