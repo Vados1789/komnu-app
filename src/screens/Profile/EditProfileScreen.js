@@ -112,7 +112,7 @@ const EditProfileScreen = ({ navigation }) => {
         await AsyncStorage.setItem('user', JSON.stringify(updatedUser));
         login(updatedUser);
         Alert.alert('Success', 'Profile updated successfully.');
-        navigation.navigate('ProfileScreen');
+        navigation.navigate('MainTabs', { screen: 'ProfileScreen' }); // Navigate back to ProfileScreen
       } else {
         Alert.alert('Error', response.data.message || 'Failed to update profile.');
       }
