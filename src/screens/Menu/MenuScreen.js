@@ -19,7 +19,7 @@ export default function MenuScreen() {
           onPress: () => {
             navigation.reset({
               index: 0,
-              routes: [{ name: 'Login' }], // Reset navigation stack to make Login the only screen
+              routes: [{ name: 'Login' }],
             });
           },
         },
@@ -65,7 +65,7 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 20,
     backgroundColor: '#fff',
-    justifyContent: 'space-between', // Ensures footer is at the bottom
+    justifyContent: 'space-between',
   },
   menuContainer: {
     marginTop: 20,
