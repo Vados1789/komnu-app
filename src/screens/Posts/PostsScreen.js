@@ -85,7 +85,7 @@ export default function PostsScreen() {
             >
                 <Text style={styles.buttonText}>Create Post</Text>
             </TouchableOpacity>
-            <PostListComponent posts={posts} onDeletePost={onDeletePost} />
+            <PostListComponent posts={posts} onDeletePost={onDeletePost} onNewPost={handleNewPost}  />
         </View>
     );
 }
