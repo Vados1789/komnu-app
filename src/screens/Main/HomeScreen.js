@@ -11,8 +11,9 @@ export default function HomeScreen({ navigation }) {
     navigation.setOptions({
       headerTitle: () => (
         <View style={styles.headerTitle}>
-          <Text style={styles.welcomeText}>Welcome,</Text>
-          <Text style={styles.usernameText}>{user.username}</Text>
+          <Text style={styles.headerText}>
+            Kom Nu, <Text style={styles.usernameText}>{user.username}</Text>
+          </Text>
         </View>
       ),
     });
@@ -32,37 +33,18 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#fff',
   },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 15,
-    backgroundColor: '#f8f8f8',
-    borderBottomWidth: 1,
-    borderBottomColor: '#ddd',
-  },
-  profilePicture: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    marginRight: 15,
-  },
-  bio: {
-    fontSize: 16,
-    color: '#555',
-  },
   postsContainer: {
     flex: 1,
   },
   headerTitle: {
-    flexDirection: 'column',
+    flexDirection: 'row',
     alignItems: 'center',
   },
-  welcomeText: {
-    fontSize: 16,
+  headerText: {
+    fontSize: 18,
     color: '#555',
   },
   usernameText: {
-    fontSize: 18,
     fontWeight: 'bold',
     color: '#333',
   },
