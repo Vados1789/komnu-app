@@ -5,8 +5,6 @@ const usePostSignalR = (onReactionUpdate, onNewPost, onPostDeleted, onPostUpdate
     useEffect(() => {
         const connection = getPostSignalRConnection();
 
-        console.log("Setting up SignalR connection. onNewPost defined:", typeof onNewPost === "function");
-
         // Set up listeners for different events
         if (onReactionUpdate) {
             connection.on("ReceiveReactionUpdate", onReactionUpdate);
