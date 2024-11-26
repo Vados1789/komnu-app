@@ -1,12 +1,14 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, Dimensions } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 
-const ICON_SIZE = 20;
+const { width } = Dimensions.get('window'); // Get screen width
+
+const ICON_SIZE = width * 0.05; // 5% of screen width
 const PRIMARY_COLOR = "#007bff";
 const BACKGROUND_COLOR = "#f9f9f9";
-const FONT_SIZE_TITLE = 24;
-const FONT_SIZE_TEXT = 16;
+const FONT_SIZE_TITLE = width * 0.06; // 6% of screen width
+const FONT_SIZE_TEXT = width * 0.04; // 4% of screen width
 
 const ProfileInfoComponent = ({ localUser }) => (
   <View style={styles.container}>

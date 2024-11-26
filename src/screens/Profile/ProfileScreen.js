@@ -1,9 +1,18 @@
 import React, { useContext, useLayoutEffect } from 'react';
-import { View, TouchableOpacity, StyleSheet, Text } from 'react-native';
+import {
+  View,
+  TouchableOpacity,
+  StyleSheet,
+  Text,
+  Dimensions,
+  Platform,
+} from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import ProfilePictureComponent from '../../components/Profile/ProfilePictureComponent';
 import ProfileInfoComponent from '../../components/Profile/ProfileInfoComponent';
 import { AuthContext } from '../../context/AuthContext';
+
+const { width, height } = Dimensions.get('window'); // Get screen dimensions
 
 const ProfileScreen = ({ navigation }) => {
   const { user } = useContext(AuthContext);
@@ -12,7 +21,7 @@ const ProfileScreen = ({ navigation }) => {
     navigation.setOptions({
       headerRight: () => (
         <TouchableOpacity onPress={() => navigation.navigate('EditProfileScreen')}>
-          <Icon name="edit" size={24} color="#007bff" style={{ marginRight: 15 }} />
+          <Icon name="edit" size={24} color="#007bff" style={styles.icon} />
         </TouchableOpacity>
       ),
     });
@@ -39,12 +48,17 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 20,
+    paddingHorizontal: width * 0.05, // 5% of the screen width
+    paddingVertical: height * 0.05, // 5% of the screen height
     backgroundColor: '#fff',
   },
+  icon: {
+    marginRight: 15,
+  },
   loadingText: {
-    fontSize: 18,
+    fontSize: Platform.OS === 'android' ? 18 : 20, // Adjust font size based on platform
     color: '#777',
+    textAlign: 'center',
   },
 });
 
